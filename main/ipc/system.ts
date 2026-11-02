@@ -31,8 +31,8 @@ export function registerSystemIpc() {
 
   /**
    * Glass: the notch shows a live, blurred view of what is behind it. For
-   * that, Windows is asked to leave this window out of screen capture
-   * (`setContentProtection`, WDA_EXCLUDEFROMCAPTURE), so capturing the screen
+   * that, the window is left out of screen capture (`setContentProtection`),
+   * so capturing the screen
    * returns what is underneath the notch rather than the notch itself. The
    * cost, said plainly in Settings: while Glass is on, the notch does not
    * appear in screenshots or screen shares.
@@ -46,13 +46,11 @@ export function registerSystemIpc() {
   })
 
   /**
-   * macOS: Glass captures the screen, which needs Screen Recording. Turning
-   * Glass on explains that first, then asks; the answer is whether it may
-   * run. Elsewhere there is nothing to ask. A denied permission can only be
+   * Glass captures the screen, which needs Screen Recording. Turning Glass on
+   * explains that first, then asks; the answer is whether it may run. A denied permission can only be
    * changed in System Settings, so the dialog offers to open it.
    */
   ipcMain.handle('glass:permission', async (): Promise<boolean> => {
-    if (process.platform !== 'darwin') return true
     if (systemPreferences.getMediaAccessStatus('screen') === 'granted') return true
     const denied = systemPreferences.getMediaAccessStatus('screen') === 'denied'
     const { response } = await dialog.showMessageBox({

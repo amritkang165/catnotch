@@ -101,7 +101,7 @@ The data is already on the notch; the gap is that nothing marks it. The calendar
 - `renderer/hooks/useCalendar.ts`: add `calendarType` to `CalendarEvent`, and export `kindOf(event)`.
 - `renderer/components/widgets/CalendarView.tsx`: `EventRow` shows the `Cake` or `Flag` icon from `lucide-react` (already used here) instead of the colour dot when `kindOf` is not `event`, and drops the time text. `DayPane` splits its list by `kindOf`, draws the "Special days" strip, and changes the count line.
 - No change to `main/ipc/calendar.ts` (it relays events whole; `calendarType` passes through), to the settings keys, or to `home.tsx`.
-- The helper binary must be rebuilt with the project's usual helper build before this works. Windows is untouched.
+- The helper binary must be rebuilt with the project's usual helper build before this works.
 
 **Value sourcing** (every value an action shows or produces, with its source):
 

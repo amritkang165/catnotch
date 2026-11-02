@@ -2,7 +2,6 @@
 import path from 'path'
 import { app, BrowserWindow, globalShortcut, ipcMain } from 'electron'
 
-const isMac = process.platform === 'darwin'
 const isProd = process.env.NODE_ENV === 'production'
 const SHORTCUT = 'CommandOrControl+Alt+,'
 
@@ -18,7 +17,7 @@ export function openSettingsWindow() {
     if (win.isMinimized()) win.restore()
     win.show()
     win.focus()
-    if (isMac) app.focus({ steal: true })
+    app.focus({ steal: true })
     return
   }
 
@@ -31,31 +30,27 @@ export function openSettingsWindow() {
     // Not exactly "CatNotch": fullscreen.ts finds the notch by that title.
     title: 'CatNotch Settings',
     show: false,
-    ...(isMac
-      ? {
-          titleBarStyle: 'hidden' as const,
-          trafficLightPosition: { x: 16, y: 16 },
-          vibrancy: 'sidebar' as const,
-          visualEffectState: 'active' as const,
-          transparent: true,
-        }
-      : { backgroundMaterial: 'mica' as const, backgroundColor: '#1c1c1e' }),
+    titleBarStyle: 'hidden',
+    trafficLightPosition: { x: 16, y: 16 },
+    vibrancy: 'sidebar',
+    visualEffectState: 'active',
+    transparent: true,
     webPreferences: { preload: path.join(import.meta.dirname, 'preload.js') },
   })
   const self = win
 
-  // macOS: an accessory app has no Dock icon; show one while this window lives.
-  if (isMac) void app.dock?.show()
+  // An accessory app has no Dock icon; show one while this window lives.
+  void app.dock?.show()
   self.once('ready-to-show', () => {
     self.show()
-    if (isMac) app.focus({ steal: true })
+    app.focus({ steal: true })
   })
   self.on('focus', () => announce(true))
   self.on('blur', () => announce(false))
   self.on('closed', () => {
     win = null
     announce(false)
-    if (isMac) app.dock?.hide()
+    app.dock?.hide()
   })
 
   if (isProd) void self.loadURL('app://./settings')

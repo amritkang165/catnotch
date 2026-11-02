@@ -1,133 +1,22 @@
 import { BrowserWindow, screen } from 'electron'
-import { spawn, ChildProcess } from 'child_process'
 import { readStore } from './store'
 import { notchWindows } from './display'
 import { watchHelper } from './mac/helper'
 
-let watcherProcess: ChildProcess | null = null
 let lastRawResult = ''
 /** A Claude Code request is waiting: the notch shows even over a fullscreen app. */
 let claudeWaiting = false
 /** Per notch window id: whether it is tucked up out of a browser's way. */
 const tucked = new Map<number, boolean>()
 
-/** Browsers, by process name: their tabs and address bar sit right under the notch. */
-const BROWSERS = new Set(['chrome', 'msedge', 'firefox', 'brave', 'opera', 'vivaldi'])
-/** The same, by macOS bundle id. */
-const MAC_BROWSERS = new Set([
+/** Browsers, by bundle id: their tabs and address bar sit right under the notch. */
+const BROWSERS = new Set([
   'com.apple.Safari', 'com.google.Chrome', 'com.microsoft.edgemac', 'org.mozilla.firefox', 'com.brave.Browser',
   'company.thebrowser.Browser', 'com.operasoftware.Opera', 'com.vivaldi.Vivaldi',
 ])
 
-const SCRIPT = (parentPid: number) => `
-$code = @"
-using System;
-using System.Runtime.InteropServices;
-using System.Text;
-
-public class FullscreenCheck {
-    [StructLayout(LayoutKind.Sequential)]
-    public struct RECT {
-        public int Left;
-        public int Top;
-        public int Right;
-        public int Bottom;
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    public struct MONITORINFO {
-        public int cbSize;
-        public RECT rcMonitor;
-        public RECT rcWork;
-        public uint dwFlags;
-    }
-
-    [DllImport("user32.dll")]
-    public static extern IntPtr GetForegroundWindow();
-
-    [DllImport("user32.dll")]
-    public static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
-
-    [DllImport("user32.dll")]
-    public static extern IntPtr MonitorFromWindow(IntPtr hwnd, uint dwFlags);
-
-    [DllImport("user32.dll")]
-    public static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);
-
-    [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-    public static extern int GetClassName(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
-
-    [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-    public static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
-
-    [DllImport("user32.dll")]
-    public static extern bool IsZoomed(IntPtr hWnd);
-
-    [DllImport("user32.dll")]
-    public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
-
-    public const uint MONITOR_DEFAULTTONEAREST = 2;
-
-    // "fullscreen,monitorLeft,monitorTop,monitorRight,monitorBottom,exe" for
-    // the foreground window, or "self" when it is deskNotch (keep the state).
-    public static string Foreground() {
-        IntPtr hwnd = GetForegroundWindow();
-        if (hwnd == IntPtr.Zero) return "0,0,0,0,0,";
-
-        StringBuilder className = new StringBuilder(256);
-        GetClassName(hwnd, className, 256);
-        string cls = className.ToString();
-        bool shell = cls == "Progman" || cls == "WorkerW" || cls == "Shell_TrayWnd" || cls == "Shell_SecondaryTrayWnd";
-
-        StringBuilder title = new StringBuilder(256);
-        GetWindowText(hwnd, title, 256);
-        if (title.ToString() == "CatNotch") return "self";
-
-        IntPtr hMonitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
-        MONITORINFO mi = new MONITORINFO();
-        mi.cbSize = Marshal.SizeOf(typeof(MONITORINFO));
-        if (!GetMonitorInfo(hMonitor, ref mi)) return "0,0,0,0,0,";
-
-        // Fullscreen is F11 or a video's fullscreen: the window exactly covers
-        // the monitor and is NOT maximized. A maximized window can cover it too
-        // (auto-hide taskbar, or its 8px border overshooting the work area),
-        // which is why IsZoomed is checked, not just the rect.
-        bool fullscreen = false;
-        RECT rect;
-        if (!shell && !IsZoomed(hwnd) && GetWindowRect(hwnd, out rect)) {
-            fullscreen = rect.Left <= mi.rcMonitor.Left + 2 && rect.Top <= mi.rcMonitor.Top + 2
-                && rect.Right >= mi.rcMonitor.Right - 2 && rect.Bottom >= mi.rcMonitor.Bottom - 2;
-        }
-
-        string exe = "";
-        try {
-            uint pid;
-            GetWindowThreadProcessId(hwnd, out pid);
-            exe = System.Diagnostics.Process.GetProcessById((int)pid).ProcessName;
-        } catch {}
-
-        return string.Format("{0},{1},{2},{3},{4},{5}", fullscreen ? 1 : 0,
-            mi.rcMonitor.Left, mi.rcMonitor.Top, mi.rcMonitor.Right, mi.rcMonitor.Bottom, exe);
-    }
-}
-"@
-
-Add-Type -TypeDefinition $code -ErrorAction SilentlyContinue
-
-$last = ""
-while ($true) {
-  if (-not (Get-Process -Id ${parentPid} -ErrorAction SilentlyContinue)) { exit }
-  $res = [FullscreenCheck]::Foreground()
-  if ($res -ne $last) {
-    Write-Output $res
-    $last = $res
-  }
-  Start-Sleep -Milliseconds 300
-}
-`
-
-/** macOS: the helper reports the frontmost app; turn it into the same line the
- *  Windows watcher prints, with the display's own bounds. */
+/** The helper reports the frontmost app; turn it into one line,
+ *  "fullscreen,left,top,right,bottom,bundle", with the display's own bounds. */
 const watchMac = (on: boolean) =>
   watchHelper(
     'watchForeground',
@@ -141,52 +30,12 @@ const watchMac = (on: boolean) =>
     },
   )
 
-export function startFullscreenWatch() {
-  if (process.platform === 'darwin') return watchMac(true)
-  if (process.platform !== 'win32') return
+export const startFullscreenWatch = () => watchMac(true)
 
-  if (watcherProcess) return
-
-  try {
-    watcherProcess = spawn('powershell', ['-NoProfile', '-NonInteractive', '-Command', SCRIPT(process.pid)], {
-      windowsHide: true,
-    })
-
-    let buffer = ''
-    watcherProcess.stdout?.on('data', (chunk: Buffer) => {
-      buffer += chunk.toString()
-      const lines = buffer.split(/\r?\n/)
-      buffer = lines.pop() ?? ''
-      for (const line of lines) {
-        const trimmed = line.trim()
-        if (trimmed) {
-          handleFullscreenChange(trimmed)
-        }
-      }
-    })
-
-    watcherProcess.on('error', (err) => {
-      console.error('[fullscreen] watcher error:', err)
-    })
-
-    watcherProcess.on('exit', () => {
-      watcherProcess = null
-    })
-  } catch (err) {
-    console.error('[fullscreen] failed to start watcher:', err)
-  }
-}
-
-export function stopFullscreenWatch() {
-  if (process.platform === 'darwin') return watchMac(false)
-  if (watcherProcess) {
-    watcherProcess.kill()
-    watcherProcess = null
-  }
-}
+export const stopFullscreenWatch = () => watchMac(false)
 
 /** Starts the watcher when a setting needs it and stops it when none does:
- *  its PowerShell costs ~80 MB, not worth keeping for nothing. */
+ *  the helper's foreground events are not worth keeping for nothing. */
 export function checkAndApplyFullscreenState() {
   const settings = (readStore().settings ?? {}) as Record<string, unknown>
   // Claude's popups need to know what is in front, so its switch keeps the watcher going.
@@ -209,10 +58,9 @@ export function setClaudeWaiting(waiting: boolean) {
   if (lastRawResult) handleFullscreenChange(lastRawResult)
 }
 
-/** The terminals a CLI session runs in, by macOS bundle id and by Windows process name (lower case). */
+/** The terminals a CLI session runs in, by bundle id (lower case). */
 const TERMINALS = new Set([
   'com.apple.terminal', 'com.googlecode.iterm2', 'dev.warp.warp-stable', 'com.mitchellh.ghostty', 'net.kovidgoyal.kitty', 'org.alacritty', 'com.github.wez.wezterm',
-  'windowsterminal', 'cmd', 'powershell', 'pwsh', 'conhost', 'wezterm-gui', 'alacritty', 'wt',
 ])
 
 /** Whether a terminal is in front, where a CLI session is already asking. VS Code never counts:
@@ -237,7 +85,7 @@ function handleFullscreenChange(rawResult: string) {
   const settings = (readStore().settings ?? {}) as Record<string, unknown>
   const hideOnFullscreen = settings.hideOnFullscreen !== false
   const tuckForBrowsers = settings.tuckForBrowsers === true
-  const browser = BROWSERS.has(exe.toLowerCase()) || MAC_BROWSERS.has(exe)
+  const browser = BROWSERS.has(exe)
 
   const displays = screen.getAllDisplays()
   for (const [id, window] of notchWindows()) {
@@ -263,5 +111,4 @@ function restoreWindow(window: BrowserWindow) {
   window.showInactive()
   window.setAlwaysOnTop(true, 'screen-saver')
   window.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
-  window.setSkipTaskbar(true)
 }

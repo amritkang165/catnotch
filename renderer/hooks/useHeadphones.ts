@@ -11,7 +11,7 @@ const SHOW_MS = 1400
 
 /**
  * The name of a pair of headphones that just connected, for a moment, then
- * null again. Windows lists a Bluetooth headset as two outputs at once
+ * null again. a Bluetooth headset can list as two outputs at once
  * (stereo and hands-free), so a burst of new devices is one moment.
  */
 export function useHeadphones() {

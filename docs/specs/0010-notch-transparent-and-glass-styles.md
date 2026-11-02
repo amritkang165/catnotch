@@ -28,13 +28,13 @@ There is no `design.md` and no design tool. The design source is the current UI 
 
 **Acceptance criteria**:
 - **AC-1**: Settings, Style shows three choices in a segmented control: Default, Transparent, Glass. Picking Transparent or Glass without Screen Recording permission leaves the style unchanged and shows a hint that names Screen Recording.
-- **AC-2**: `notchStyle` accepts `'black' | 'transparent' | 'glass'`, default `'black'`. A saved `'glass'` stays `'glass'`, a saved `'translucent'` becomes `'glass'`, a saved `'mica'` becomes `'black'`. No other setting is added.
+- **AC-2**: `notchStyle` accepts `'black' | 'transparent' | 'glass'`, default `'black'`. A saved `'glass'` stays `'glass'`, a saved `'translucent'` becomes `'glass'`, a saved legacy `'mica'` becomes `'black'`. No other setting is added.
 - **AC-3**: Glass and Transparent use the values in the **Glass recipe** table below. On the same wallpaper they look clearly different: Glass is frosted (blur 24 on large surfaces), Transparent is clear (blur 4).
 - **AC-4**: Transparent never draws a tint lighter than alpha 0.18 at any point, and text on it carries a soft shadow. Primary text stays readable over a white wallpaper.
 - **AC-5**: On a notched display, closed with nothing to show, the notch is pure black and no screen capture is running. Closed with something to show, the cutout width stays black and each wing shows the chosen glass. On a display without a cutout, the whole closed pill shows the chosen glass.
 - **AC-6**: Open, the shell, the two ears, the dock and the apps tray all use the chosen style from one backdrop, with no seam where they meet.
 - **AC-7**: Cards in the open panel use soft inner glass in every style: a 1 pixel light rim on the top edge, a corner radius that nests inside the panel radius, and three text levels (primary, secondary, tertiary white) instead of ad hoc opacities.
-- **AC-8**: The companion tile shows a soft glow behind the avatar in the avatar's own palette, and its four modes (Timer, Reminder, Clock, Screen time) switch with a macOS style segmented control whose thumb slides with a spring. All four modes still work as before.
+- **AC-8**: The companion tile shows a soft glow behind the avatar in the avatar's own palette, and its three modes (Timer, Reminder, Clock) switch with a macOS style segmented control whose thumb slides with a spring. All three modes still work as before.
 - **AC-9**: The screen capture starts when the first glass surface appears and stops when the last one goes away or the style is Default.
 - **AC-10**: Before the first video frame, or when the capture cannot start, every glass surface shows its tint and stays legible, with no empty or flashing area.
 
@@ -137,7 +137,7 @@ Decisions made here without asking (runner up in brackets):
 - Old settings: load with `translucent`, `mica`, `glass`, and none. Verifies **AC-2**.
 - Closed on a notched Mac: idle shows pure black and no capture; start a timer and the wings show glass with a black centre; on a non notched display the whole pill is glass. Verifies **AC-5**, **AC-9**.
 - Cold start: first open before a frame arrives shows the tint, not a blank. Verifies **AC-10**.
-- Cards and companion: tiles show rim, nested radius and three text levels in all three styles; the companion glow and sliding mode control work in all four modes. Verifies **AC-7**, **AC-8**.
+- Cards and companion: tiles show rim, nested radius and three text levels in all three styles; the companion glow and sliding mode control work in all three modes. Verifies **AC-7**, **AC-8**.
 
 ## Build plan
 

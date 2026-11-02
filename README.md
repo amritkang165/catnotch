@@ -2,7 +2,13 @@
 <img src="docs/images/desknotch-screenshot.png" alt="CatNotch open on a Mac, showing the cat companion, now playing and AI usage" width="100%">
 
 
-**The notch for Windows and macOS.**
+**The notch for macOS.**
+
+[![Download for macOS](https://img.shields.io/github/v/release/thecharydev/catnotch?label=Download%20for%20macOS&logo=apple&style=for-the-badge)](https://github.com/thecharydev/catnotch/releases/latest/download/CatNotch.dmg)
+
+> **macOS says "CatNotch Not Opened"?** The build is not notarized, so the first open is blocked. Click **Done** (not Move to Bin), then open **System Settings, Privacy and Security** and click **Open Anyway**, or run `xattr -cr /Applications/CatNotch.app` in Terminal. [Full steps](#catnotch-not-opened).
+
+[Install steps](#install).
 
 CatNotch sits at the top centre of your screen as a slim bar. Hover it, and it opens into your music, a focus timer with a small companion, your tasks, a shelf for files, your AI usage and the apps you use most. Move away, and it folds back out of your way.
 
@@ -17,7 +23,6 @@ CatNotch sits at the top centre of your screen as a slim bar. Hover it, and it o
 - **Focus countdown**: a tiny ring and the time left while a session runs.
 - **Clock**: 12-hour time whenever nothing else needs the space.
 - **AI usage**: your Claude and Codex limits as two small rings, 5-hour inside and weekly outside.
-- **Screen time**: today's total from [ScreenWise](https://www.bruhlabs.top/download), if you have it installed.
 - **Privacy dots**: orange while any app uses the microphone, green for the camera, and the app's name for a moment when it starts.
 - **Just connected**: headphones, Wi-Fi and Bluetooth devices get a brief moment of their own when they connect, with the battery level for earbuds and mice that report one.
 - **Battery**: a moment when you plug in or unplug, a warning at 20% and 10%, and the charge kept in view while it is low.
@@ -28,7 +33,7 @@ CatNotch sits at the top centre of your screen as a slim bar. Hover it, and it o
 - **Shelf**: drop files anywhere on the notch to park them, with thumbnails; drag them back out one at a time, or all at once.
 
 ### A companion with a job
-- **One mode at a time**: Timer, Reminder, Clock or Screen time (needs ScreenWise), each with its own look and body language.
+- **One mode at a time**: Timer, Reminder or Clock, each with its own look and body language.
 - **Focus timer**: 1 to 60 minutes, or any custom length down to the second.
 - **Reminders**: pick a time and an optional message; when it comes, the notch opens on its own with your companion ringing, and you can snooze it or let it go.
 - **It reacts**: watches what it is working on, celebrates a finished task, and sleeps at night.
@@ -40,8 +45,8 @@ CatNotch sits at the top centre of your screen as a slim bar. Hover it, and it o
 ### Claude Code, answered from the notch
 - **Permission popups**: when Claude Code (in the terminal or the VS Code extension) wants to run a command or edit a file, a slim strip appears at the top of the notch (or the notch opens to it) with the command, the project name, **Allow**, **Deny** and a terminal icon for **Ask in terminal**. Quick questions show tap answers; longer ones open a card.
 - **Questions**: when Claude asks you a question, read all of it on the notch, then tap an option or type your own answer.
-- **Claude tab**: lists every Claude Code session on your PC, in the terminal or in VS Code, with a CLI or VS Code badge and whether it is working, idle or waiting for you. Sessions already open show up within about 20 seconds.
-- **Chat**: click a session in the Claude tab to read its conversation (your messages and Claude's replies, tool calls as short "Ran Bash" lines) and type a message to it. The reply appears on the notch. Sending is blocked while that session is busy in its own window, and the terminal or VS Code window that has it open won't update live. It needs the `claude` program on this PC.
+- **Claude tab**: lists every Claude Code session on your Mac, in the terminal or in VS Code, with a CLI or VS Code badge and whether it is working, idle or waiting for you. Sessions already open show up within about 20 seconds.
+- **Chat**: click a session in the Claude tab to read its conversation (your messages and Claude's replies, tool calls as short "Ran Bash" lines) and type a message to it. The reply appears on the notch. Sending is blocked while that session is busy in its own window, and the terminal or VS Code window that has it open won't update live. It needs the `claude` program on this Mac.
 - **Safe by default**: it takes keyboard focus only when you click the answer box, waits 60 seconds, then hands the question back to Claude's own prompt. If CatNotch is closed, Claude simply asks as usual.
 - **Setup**: Settings, General, **Claude Code on the notch**. It shows exactly what it will add to `~/.claude/settings.json`, saves a backup the first time, and only ever touches its own entries. If you turned it on in an older version, Settings offers **Update hooks**. Start a new Claude session after turning it on.
 
@@ -50,7 +55,7 @@ CatNotch sits at the top centre of your screen as a slim bar. Hover it, and it o
 - **Private**: it asks first (only when you click Allow), reads only, and keeps nothing. Switch single calendars off in Settings, Notch, Home cards.
 
 ### Your apps, your way
-- **Apps bar**: Windows' own most-used apps, or your favourites, one tap to open. Four in view, the rest a scroll away.
+- **Apps bar**: Your most-used apps, or your favourites, one tap to open. Four in view, the rest a scroll away.
 
 ### Looks that fit your desktop
 - **Two styles**: Default (a soft charcoal) and Glass (a smoked, live blur of whatever is behind it).
@@ -61,21 +66,30 @@ CatNotch sits at the top centre of your screen as a slim bar. Hover it, and it o
 
 ## Install
 
-1. Download the latest `CatNotch Setup.exe` from [**Releases**](https://github.com/thecharydev/catnotch/releases).
-2. Run it. The beta is not code-signed yet, so Windows may show **"Windows protected your PC"**: click **More info**, then **Run anyway**.
-3. A slim bar appears at the top centre of your screen. Hover it to open; Settings is the gear icon on the dock.
-
-**Requires** Windows 10 or 11.
-
-## Install on macOS
-
-Requires macOS 13 or newer. On a MacBook with a notch, CatNotch wraps the real notch. On any other screen it shows the same pill as Windows.
+Requires macOS 13 or newer. On a MacBook with a notch, CatNotch wraps the real notch. On any other screen it shows a slim pill instead.
 
 [![Download for macOS](https://img.shields.io/github/v/release/thecharydev/catnotch?label=Download%20for%20macOS&logo=apple&style=for-the-badge)](https://github.com/thecharydev/catnotch/releases/latest/download/CatNotch.dmg)
 
 1. Download [**CatNotch.dmg**](https://github.com/thecharydev/catnotch/releases/latest/download/CatNotch.dmg) (universal: Apple silicon and Intel). Older versions are on [Releases](https://github.com/thecharydev/catnotch/releases).
 2. Open it and drag CatNotch to Applications.
-3. The build is not notarized (that needs a paid Apple account), so the first open is blocked. Open **System Settings, Privacy and Security**, scroll down and click **Open Anyway**.
+3. Open CatNotch. macOS will block it (see below).
+
+### "CatNotch Not Opened"
+
+The build is not notarized (that needs a paid Apple account), so the first open shows:
+
+> "CatNotch" Not Opened. Apple could not verify "CatNotch" is free of malware that may harm your Mac or compromise your privacy.
+
+Do not click **Move to Bin**. Click **Done**, then fix it either way:
+
+- **Settings:** open **System Settings, Privacy and Security**, scroll down and click **Open Anyway** next to CatNotch, then confirm.
+- **Terminal:** if there is no Open Anyway button, run this once and open the app again:
+
+  ```sh
+  xattr -cr /Applications/CatNotch.app
+  ```
+
+You only need to do this once per downloaded version.
 
 Update by downloading the new DMG. CatNotch never installs updates by itself on macOS; Settings tells you when a newer version is out.
 
@@ -93,40 +107,17 @@ Requires Node.js 20+.
 ```bash
 npm install     # install dependencies
 npm run dev     # run in development, with hot reload
-npm run build                        # build the Windows installer into dist/
 npm run build -- --mac --universal   # build the macOS app and dmg into dist/
 ```
 
-### Releasing an update
-
-Installed copies update themselves from GitHub Releases: they check a minute after start and every six hours, download in the background, and install themselves once the PC has been left alone for a minute (or when the app quits).
-
-1. Raise `version` in `package.json` (updates only go to a higher version).
-2. Build and publish with a GitHub token that can create releases:
-   ```bash
-   GH_TOKEN=<token> npm run build -- --publish always
-   ```
-   This uploads the installer and `latest.yml`, the file the app reads, to a draft release.
-3. Publish the draft on GitHub. Installed apps pick it up on their next check.
-
-Keep `appId` in `electron-builder.yml` unchanged, or an update installs as a second app. Only builds that include the updater can update themselves; earlier betas need one manual install.
-
 ## Privacy
 
-Everything stays on your computer. Media, microphone and camera state, Wi-Fi, Bluetooth, screenshots and app usage are read from your system (Windows or macOS) locally and never leave it. AI usage is read with the logins Claude Code and Codex already keep on your machine, and those tokens are sent only to their own providers (Anthropic and OpenAI).
+Everything stays on your computer. Media, microphone and camera state, Wi-Fi, Bluetooth, screenshots and app usage are read from your system locally and never leave it. AI usage is read with the logins Claude Code and Codex already keep on your machine, and those tokens are sent only to their own providers (Anthropic and OpenAI).
 
 ## Known limits (beta)
 
-- **Start with Windows** works for the installed app only, not `npm run dev`.
-- **Screen time** needs [ScreenWise](https://www.bruhlabs.top/download); without it the option is greyed out. It updates about once a minute.
-- **Glass** hides the notch from screenshots and screen sharing while it is on; that is how Windows lets an app capture what is behind it.
-- **Screenshots** are caught when Snipping Tool saves them, which is its default.
-- **AI usage** appears only if you use Claude Code or Codex on the same PC.
-
-### macOS differences
-
+- **AI usage** appears only if you use Claude Code or Codex on the same Mac.
 - The microphone and camera moments say "Microphone" or "Camera" but not which app, because macOS only tells us which device is running.
-- Screen time (ScreenWise) is Windows only, so that tile is hidden.
 - Recent files, most used apps and screenshot catching rely on Spotlight. If Spotlight indexing is switched off, they stay empty.
 - Now playing uses a private Apple interface that Apple can change in a future macOS release.
 

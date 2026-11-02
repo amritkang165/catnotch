@@ -2,7 +2,7 @@
   "private": true,
   "name": "desknotch",
   "productName": "CatNotch",
-  "description": "CatNotch is an app for Windows and macOS that gives you a notch, just like the Apple devices",
+  "description": "CatNotch is an app for macOS that gives you a notch, just like the Apple devices",
   "version": "1.0.6",
   "author": "Devezio.tech",
   "copyright": "Copyright © 2026 Yash Srivastava and Chary",
@@ -17,9 +17,6 @@
     "clean:port": "npx --yes kill-port 8888",
     "postinstall": "electron-builder install-app-deps",
     "test": "vitest run"
-  },
-  "optionalDependencies": {
-    "@coooookies/windows-smtc-monitor": "^1.0.12"
   },
   "dependencies": {
     "bot-avatars": "^0.1.1",

@@ -21,7 +21,7 @@ _Steps derived from spec 0002 acceptance criteria. `/check verify` runs these; `
 - [ ] Turn on Hide in fullscreen, put a video fullscreen, trigger a request → the notch appears over it and hides again after → AC-10
 - [ ] Occupy port 47821 (`nc -l 47821`), start DeskNotch with the switch on → it uses 47822 and the hook entries now say 47822 → AC-11
 - [ ] Interrupt Claude (Esc) while a popup waits → the popup disappears → AC-12
-- [ ] Repeat the main flow on Windows and from the VS Code extension; set `CLAUDE_CONFIG_DIR` and confirm that folder's `settings.json` is the one edited → AC-14
+- [ ] Repeat the main flow from the VS Code extension; set `CLAUDE_CONFIG_DIR` and confirm that folder's `settings.json` is the one edited → AC-14
 
 ## Commands
 - [ ] `curl -i -XPOST http://127.0.0.1:47821/desknotch/permission -d '{}'` (no token) → 401, nothing on screen → AC-7

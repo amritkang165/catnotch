@@ -37,7 +37,7 @@ One deliberate reversal: 0005's invariant "never sends transcript text to the re
 - **AC-10**: Transcript text goes to the renderer only for the session you opened, only on your click, and is never stored or logged. The chat feed is refused for a session id that is not in the list, and for a transcript path outside `<config dir>/projects`.
 - **AC-11**: The message is passed as one argument, never through a shell, so quotes, `$`, backticks or a leading `-` in it do nothing special. The session id must look like a UUID before it is used.
 - **AC-12**: With "Claude Code" switched off, the chat and send routes refuse and the list is empty as in 0005.
-- **AC-13**: Works on macOS and Windows and honours `CLAUDE_CONFIG_DIR`.
+- **AC-13**: Works on macOS and honours `CLAUDE_CONFIG_DIR`.
 
 ## Options considered
 
@@ -115,7 +115,7 @@ Run result is read from the transcript, not from the process output, so the chat
 | Open chat | Busy | session state is Working or Waiting, or the id is in `running` |
 | Send | Session id | the row you clicked, checked against the UUID pattern and the session list |
 | Send | Working folder | the session's `cwd` (hook body or first transcript line, as in 0005); must exist as a directory |
-| Send | Program to run | first existing of: `~/.local/bin/claude`, `/opt/homebrew/bin/claude`, `/usr/local/bin/claude`, `~/.claude/local/claude` on macOS; on Windows `claude.exe` or `claude.cmd` found on `PATH`; if none, ask the user's login shell once (`$SHELL -lc 'command -v claude'`) and cache the path for the app run. A Finder launched app has a short `PATH`, which is why `PATH` alone is not enough |
+| Send | Program to run | first existing of: `~/.local/bin/claude`, `/opt/homebrew/bin/claude`, `/usr/local/bin/claude`, `~/.claude/local/claude`; if none, ask the user's login shell once (`$SHELL -lc 'command -v claude'`) and cache the path for the app run. A Finder launched app has a short `PATH`, which is why `PATH` alone is not enough |
 | Send | Message text | the text box, trimmed, cut at 4000 characters |
 | Send | Arguments | fixed array: `-p`, `--resume`, `<id>`, `--permission-mode`, `default`, `--`, `<text>`; run with `execFile` (no shell), `cwd` set, `timeout` 600000 ms |
 | Send | Permission handling | the hooks already in Claude's settings (0002); nothing extra is passed |
@@ -156,7 +156,7 @@ No build approach is recorded for the project, so this uses end to end thin slic
 4. Send: program lookup with cache, `claude:send` with the `running` set and the busy checks, `execFile` with timeout, `claude:chat-changed`, the text box, Send, "Claude is replying…" and error line, satisfies **AC-4**, **AC-5**, **AC-6**, **AC-9**, **AC-11**
 5. Focus: take focus on the box, give it back on send, Back and blur, and make sure a Waiting popup arriving over an open chat still works, satisfies **AC-7**, **AC-8**
 6. Guards: the switch check, the symlink safe path check, the UUID check, satisfies **AC-10**, **AC-12**
-7. Layout and cross platform: a chat height in `home.tsx` and `ClaudeView.tsx`, Windows program lookup, `CLAUDE_CONFIG_DIR`, satisfies **AC-13**
+7. Layout: a chat height in `home.tsx` and `ClaudeView.tsx`, the `claude` program lookup, `CLAUDE_CONFIG_DIR`, satisfies **AC-13**
 8. Docs: `PRIVACY.md` (the opened session's text is shown on the notch, not stored), README and `doc/Functionality.md` for the chat and the "other window does not live update" note, and a line in 0005 saying its "never sends transcript text to the renderer" rule is relaxed by this spec, satisfies **AC-10**
 
 ## Consequences

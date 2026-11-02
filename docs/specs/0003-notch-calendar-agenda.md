@@ -5,13 +5,13 @@
 
 ## Summary
 
-DeskNotch gets a Calendar view that shows what is on your Mac's calendar today and tomorrow, with a colour dot per calendar, the time, and a Join button for Zoom, Meet and Teams meetings. It reads the calendars you already have in the Mac Calendar app (Google, iCloud, Outlook), so there is no new sign in. It only reads, it never creates or changes events. A small "next event" line also appears on Home. Windows is not part of this spec, so the view is simply not there on Windows.
+DeskNotch gets a Calendar view that shows what is on your Mac's calendar today and tomorrow, with a colour dot per calendar, the time, and a Join button for Zoom, Meet and Teams meetings. It reads the calendars you already have in the Mac Calendar app (Google, iCloud, Outlook), so there is no new sign in. It only reads, it never creates or changes events. A small "next event" line also appears on Home.
 
 ## Context
 
 DeskNotch is an Electron and Next app. On macOS, system features come from one Swift helper (`native/mac`) that talks to the main process in JSON lines, and the same helper already owns a permission (Location). There is no calendar code today, and no `docs/scope/` row, so this is a standalone feature spec. No `AGENTS.md` exists, so the stack was read from `package.json` and the code (Electron 43, Next 16, React 19, Tailwind 4, Swift helper, macOS 13 or newer).
 
-The notch is small and glanceable. What you want from a calendar there is "what is next, when, and how do I join", not a full calendar. Windows has no clean way to read the system calendar from Electron, so Windows is deliberately left for a later spec rather than shipping a brittle workaround.
+The notch is small and glanceable. What you want from a calendar there is "what is next, when, and how do I join", not a full calendar.
 
 Build approach: none is recorded for this project, so this plan assumes an end to end thin slice first (Tracer Bullet), then thickens.
 
@@ -24,7 +24,7 @@ Build approach: none is recorded for this project, so this plan assumes an end t
 - As a privacy minded user, I want the app to ask before it touches my calendar and to never change it, so that I can trust it.
 
 **Acceptance criteria** (the contract, each independently checkable):
-- **AC-1**: On macOS with `showCalendar` on, a Calendar view appears in the view dock after Files. With `showCalendar` off it is gone, along with the Home line. On Windows there is no Calendar view, no Calendar setting and no Home line, and nothing calendar related runs.
+- **AC-1**: On macOS with `showCalendar` on, a Calendar view appears in the view dock after Files. With `showCalendar` off it is gone, along with the Home line.
 - **AC-2**: Before access is decided, opening the Calendar view shows a short explainer and an Allow button. The macOS permission prompt appears only after Allow is clicked. DeskNotch never asks for calendar access at launch or from any other screen.
 - **AC-3**: If access is denied, restricted, or only "add events" access was given, the view shows "Calendar access is off" and an Open System Settings button that opens the Calendars privacy pane. The Home line stays hidden. Nothing crashes.
 - **AC-4**: With access, the view shows a Today heading and a Tomorrow heading (the Mac's local days). Each lists events by start time, all day events first. Each row shows a colour dot (the calendar's own colour), the title, and either "start to end" (in the Mac's 12 or 24 hour format) or "All day". An event happening now is marked "Now". Events that already ended are not shown. The list fills within 2 seconds of opening the view.
@@ -37,7 +37,6 @@ Build approach: none is recorded for this project, so this plan assumes an end t
 - **AC-11**: Empty states read clearly: "Nothing planned today" when today has nothing left (tomorrow still shows), and "Nothing planned" when both days are empty. No calendars at all shows the same "Nothing planned" state.
 - **AC-12**: If the helper is missing or crashes, only the calendar features turn off (the view shows "Calendar unavailable"). The notch, tasks, focus and Shelf keep working.
 - **AC-13**: Event titles, times and notes are never written to disk or logs by DeskNotch. `PRIVACY.md` and `README.md` say what is read, that it stays on the Mac, and that nothing is changed.
-- **AC-14**: The Windows build behaves exactly as before, and no macOS calendar module is loaded on Windows.
 
 ## Options considered
 
@@ -51,7 +50,6 @@ Add calendar commands to the helper you already ship, read events with Apple's E
 - Real calendar colours, accepted or declined status and recurring events come for free.
 
 **Cons**:
-- macOS only, so Windows waits for its own spec.
 - Adds a permission prompt and a TCC (Apple's privacy permissions) entry for the helper.
 
 ### Option 2: Google Calendar sign in
@@ -84,7 +82,7 @@ Add calendar commands to `native/mac`, read the system calendars with EventKit a
 
 ## Rationale
 
-The helper already exists, already holds a permission, and the app already spawns it and restarts it on a crash. EventKit gives the user's real accounts, colours, declines and recurrences with no credentials stored by DeskNotch, which is both the least code and the lowest risk. Google sign in and ICS both add a secret to look after for less coverage. Leaving Windows out keeps this small and honest; a Windows path (Outlook or an ICS link) can be its own decision later.
+The helper already exists, already holds a permission, and the app already spawns it and restarts it on a crash. EventKit gives the user's real accounts, colours, declines and recurrences with no credentials stored by DeskNotch, which is both the least code and the lowest risk. Google sign in and ICS both add a secret to look after for less coverage.
 
 Read only is chosen on purpose. On macOS 14 and later EventKit only offers "full access" (read and write together) as the permission, so the promise "we never change your calendar" is kept by the code (AC-7), not by the permission. That is why AC-7 is checkable and why the spec forbids any write call.
 
@@ -163,12 +161,11 @@ Relationship: CalendarInfo 1 to many CalendarEvent through `calendarId`. Decline
 - Unsafe link (non allowlisted host, `http`, `javascript:`) gets no Join, and `calendar:join` refuses it, verifies **AC-6**.
 - Search `native/mac` for write calls, verifies **AC-7**.
 - Kill the helper, the notch keeps working, verifies **AC-12**.
-- Windows build has no calendar anything, verifies **AC-1**, **AC-14**.
 
 ## Build plan
 
 1. Helper thin thread: add `calendarStatus` and `calendarEvents` (no prompt yet, read when already granted), the two `Info.plist` keys, and rebuild with `scripts/build-helper.sh`. Satisfies **AC-4**, **AC-7**, **AC-12**.
-2. Main side: `main/ipc/calendar.ts` with `calendar:status` and `calendar:events`, registered in `main/ipc/index.ts` on macOS only, plus the three new settings keys in `main/store.ts`. Satisfies **AC-1**, **AC-14**.
+2. Main side: `main/ipc/calendar.ts` with `calendar:status` and `calendar:events`, registered in `main/ipc/index.ts` on macOS only, plus the three new settings keys in `main/store.ts`. Satisfies **AC-1**.
 3. Renderer thin thread: `useCalendar` hook and a bare `CalendarView.tsx` (plain list), added to `VIEWS` in `renderer/pages/home.tsx` only when macOS and `showCalendar`, with size constants like the other views. Satisfies **AC-1**, **AC-4**.
 4. Consent flow: `calendarRequest`, the explainer, the Allow button, the access off state with `calendar:openPrivacy`. Satisfies **AC-2**, **AC-3**.
 5. Row detail: colour dot, time text, "All day", "Now", ended events dropped, declined and cancelled dropped in the helper, empty states. Satisfies **AC-4**, **AC-5**, **AC-11**.
@@ -176,17 +173,15 @@ Relationship: CalendarInfo 1 to many CalendarEvent through `calendarId`. Decline
 7. Live refresh: helper `calendarChanged` push, minute tick, 5 minute safety query. Satisfies **AC-8**.
 8. Settings: Calendar on or off, the per calendar toggles, `hiddenCalendarIds` filtering in the view. Satisfies **AC-9**, **AC-1**.
 9. Home line: next event with "in N min" and "now", hidden by the rules in AC-10. Satisfies **AC-10**.
-10. Docs and checks: update `PRIVACY.md`, `README.md`, `doc/Functionality.md`; verify the Windows build shows nothing calendar related and the write call search is empty. Satisfies **AC-13**, **AC-14**, **AC-7**.
+10. Docs and checks: update `PRIVACY.md`, `README.md`, `doc/Functionality.md`; verify the write call search is empty. Satisfies **AC-13**, **AC-7**.
 
 ## Consequences
 
 **Positive**:
 - Useful on day one with the accounts already on the Mac, and no secrets stored.
 - Small: one helper extension, one ipc file, one hook, one view, one Home line.
-- Windows and Mac stay isolated, so a calendar bug cannot touch the Windows build.
 
 **Negative / tradeoffs**:
-- macOS only, so Windows users get nothing until a later spec.
 - macOS asks for full calendar access (read and write together) even though DeskNotch only reads. The privacy text must be plain about that.
 - Another permission to explain, and a new `Info.plist` key set that must be present or the prompt silently fails.
 
@@ -198,5 +193,4 @@ Relationship: CalendarInfo 1 to many CalendarEvent through `calendarId`. Decline
 
 - [ ] Verify on a real Mac that `ical://ekevent/<id>` opens the right event on macOS 13, 14 and 15; if not, fall back to opening Calendar only.
 - [ ] Verify the TCC prompt appears for the helper (it is a `LSUIElement` child process) and names DeskNotch Helper clearly.
-- [ ] A separate spec for Windows (Outlook through PowerShell, or an ICS link).
 - [ ] Optional later: a notch pop up a few minutes before an event, like the Reminder view.

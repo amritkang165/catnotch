@@ -5,7 +5,7 @@
 
 ## Summary
 
-Today the Calendar view shows a small month grid that you cannot use, and a fixed list of today and tomorrow. This change makes the grid work. You click any day and the right side switches to that day: its date, how many events and tasks it has, the events with their times, and the tasks due that day. You can tick, add and remove tasks right there. You can also move between months, and days that have something on them get a small dot. To make "tasks for a day" mean something, a task gets an optional due day. Nothing changes in the Swift helper or in what is read from your calendar, and Windows is not touched.
+Today the Calendar view shows a small month grid that you cannot use, and a fixed list of today and tomorrow. This change makes the grid work. You click any day and the right side switches to that day: its date, how many events and tasks it has, the events with their times, and the tasks due that day. You can tick, add and remove tasks right there. You can also move between months, and days that have something on them get a small dot. To make "tasks for a day" mean something, a task gets an optional due day. Nothing changes in the Swift helper or in what is read from your calendar.
 
 ## Context
 
@@ -153,7 +153,6 @@ The question "what tasks are on this day" can only be answered if a task knows i
 **Positive**:
 - The calendar becomes useful beyond today and tomorrow, and tasks finally have a place in time.
 - Small: no helper rebuild, no new ipc, one optional field.
-- The old data and the Windows build are untouched.
 
 **Negative / tradeoffs**:
 - Undated tasks only show on Today, and overdue tasks do not roll forward.

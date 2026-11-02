@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react'
 
-/** Mirrors TopApp in main/ipc/apps.ts. */
+/** Mirrors TopApp in main/mac/apps.ts. */
 export interface TopApp {
   id: string
   name: string
   icon: string | null
 }
 
-/** The apps used most, by Windows' own count; asked for once per mount, while enabled. */
+/** The apps used most, by Spotlight's launch count; asked for once per mount, while enabled. */
 export function useTopApps(enabled = true) {
   const [apps, setApps] = useState<TopApp[] | null>(null)
   useEffect(() => {

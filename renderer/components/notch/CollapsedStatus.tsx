@@ -1,6 +1,6 @@
 import React from 'react'
 import { AnimatePresence, motion } from 'motion/react'
-import { BatteryCharging, BatteryLow, Bluetooth, Camera, Headphones, Hourglass, Mic, Wifi } from 'lucide-react'
+import { BatteryCharging, BatteryLow, Bluetooth, Camera, Headphones, Mic, Wifi } from 'lucide-react'
 import { time12 } from '../../lib/time'
 import type { NowPlaying } from '../../hooks/useNowPlaying'
 import type { TaskStore } from '../../hooks/useTasks'
@@ -14,7 +14,6 @@ import type { PrivacyState } from '../../hooks/usePrivacy'
 import type { BatteryState } from '../../hooks/useBattery'
 import { useNow } from '../../hooks/useNow'
 import { WARNING } from '../widgets/AiOrbs'
-import { formatScreenTime } from '../../hooks/useScreenTime'
 
 const spring = { type: 'spring' as const, stiffness: 380, damping: 32 }
 
@@ -62,10 +61,8 @@ interface CollapsedStatusProps {
   accent?: string
   flavor?: Flavor
   photo?: string | null
-  /** The right side: the time, the AI limits as rings, or ScreenWise's screen time. */
-  right: 'time' | 'ai' | 'screen'
-  /** Today's screen time from ScreenWise, for right = 'screen'. */
-  screenMs?: number | null
+  /** The right side: the time, the AI limits as rings, */
+  right: 'time' | 'ai'
   limits: ProviderLimits[]
   privacy: PrivacyState
   /** The laptop's charge: shown only while it is low and not charging. */
@@ -135,13 +132,12 @@ const Clock: React.FC = () => {
  * privacy dots at the very edge.
  */
 const Right: React.FC<{
-  right: 'time' | 'ai' | 'screen'
-  screenMs?: number | null
+  right: 'time' | 'ai'
   timeOnLeft: boolean
   limits: ProviderLimits[]
   privacy: PrivacyState
   battery?: BatteryState
-}> = ({ right, screenMs, timeOnLeft, limits, privacy, battery }) => {
+}> = ({ right, timeOnLeft, limits, privacy, battery }) => {
   const ai = right === 'ai' ? windows(limits) : null
   const dots = [privacy.camera && CAMERA, privacy.mic && MIC].filter(Boolean) as string[]
   const low = Boolean(battery?.supported && !battery.charging && battery.level <= LOW_LEVEL)
@@ -150,13 +146,6 @@ const Right: React.FC<{
     <div className="ml-auto flex shrink-0 items-center gap-2">
       {right === 'time' ? (
         !timeOnLeft && <Clock />
-      ) : right === 'screen' ? (
-        screenMs != null && (
-          <span aria-label="Screen time today" className="flex items-center gap-1 whitespace-nowrap text-[10.5px] font-semibold leading-none tabular-nums text-white/75">
-            <Hourglass size={10} strokeWidth={2.2} className="block shrink-0 text-white/45" />
-            <span className="block">{formatScreenTime(screenMs)}</span>
-          </span>
-        )
       ) : (
         ai && (
           // The Watch's rings: the weekly window outside, the session inside,
@@ -223,7 +212,7 @@ const clock = (ms: number) => {
  * music (just the art and a pulse — the title was a status line nobody read),
  * then what is left to do.
  */
-const Status: React.FC<CollapsedStatusProps> = ({ nowPlaying, tasks, timer, avatar, accent, flavor, photo, right, screenMs, limits, privacy, battery, cutout }) => {
+const Status: React.FC<CollapsedStatusProps> = ({ nowPlaying, tasks, timer, avatar, accent, flavor, photo, right, limits, privacy, battery, cutout }) => {
   const focusing = timer.isRunning
   const isPlaying = !focusing && Boolean(nowPlaying?.isPlaying)
   // On a cutout the left wing is for events; the idle time goes to the right.
@@ -316,7 +305,7 @@ const Status: React.FC<CollapsedStatusProps> = ({ nowPlaying, tasks, timer, avat
       </AnimatePresence>
 
       {cutout && <div className="shrink-0" style={{ width: cutout }} />}
-      <Right right={restingOnCutout ? 'time' : right} screenMs={screenMs} timeOnLeft={idle || restingOnCutout} limits={limits} privacy={privacy} battery={battery} />
+      <Right right={restingOnCutout ? 'time' : right} timeOnLeft={idle || restingOnCutout} limits={limits} privacy={privacy} battery={battery} />
     </div>
   )
 }

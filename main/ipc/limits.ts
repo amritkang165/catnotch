@@ -101,20 +101,18 @@ async function fetchLimits(
   }
 }
 
-/** Claude Code's sign-in. On macOS it lives in the Keychain, where reading it
+/** Claude Code's sign-in. It lives in the Keychain, where reading it
  *  makes macOS show its own "allow" prompt the first time. Only called after
  *  the consent dialog. An empty Keychain falls back to the credentials file. */
 const claudeOauth = async () => {
-  if (process.platform === 'darwin') {
-    const secret = await new Promise<string>((resolve) =>
-      execFile('security', ['find-generic-password', '-s', 'Claude Code-credentials', '-w'], (_error, stdout) => resolve(stdout ?? '')),
-    )
-    try {
-      const oauth = JSON.parse(secret).claudeAiOauth
-      if (oauth) return oauth
-    } catch {
-      // Empty or not JSON: not signed in through the Keychain.
-    }
+  const secret = await new Promise<string>((resolve) =>
+    execFile('security', ['find-generic-password', '-s', 'Claude Code-credentials', '-w'], (_error, stdout) => resolve(stdout ?? '')),
+  )
+  try {
+    const oauth = JSON.parse(secret).claudeAiOauth
+    if (oauth) return oauth
+  } catch {
+    // Empty or not JSON: not signed in through the Keychain.
   }
   return (await readJson('.claude/.credentials.json')).claudeAiOauth
 }

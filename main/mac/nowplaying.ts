@@ -1,13 +1,50 @@
 /**
  * Now playing on macOS, from the vendored mediaremote-adapter (native/mac/
  * mediaremote-adapter). It runs under Apple's own /usr/bin/perl, the only
- * thing still allowed to read MediaRemote. Emits the same shape as smtc.ts.
+ * thing still allowed to read MediaRemote.
  */
-import { app } from 'electron'
+import { app, BrowserWindow, ipcMain, nativeImage } from 'electron'
 import { execFile, spawn, type ChildProcess } from 'child_process'
 import { existsSync } from 'fs'
 import path from 'path'
-import { setNowPlaying, type NowPlaying } from '../smtc'
+
+export interface NowPlaying {
+  sourceAppId: string
+  title: string
+  artist: string
+  album: string
+  isPlaying: boolean
+  position: number
+  duration: number
+  /** Album art as a data URL, or null when the player publishes none. */
+  thumbnailUrl: string | null
+}
+
+let current: NowPlaying | null = null
+
+/** Album art is never shown larger than this, so bigger art is shrunk to it,
+ *  once per track: players can hand over a 4K cover, which took ~140ms to
+ *  decode every time a card holding it appeared, stalling the notch's spring. */
+const ART = 256
+let art: { from: string; to: string } | null = null
+const smallArt = (url: string | null) => {
+  if (!url) return null
+  if (art?.from === url) return art.to
+  const image = nativeImage.createFromDataURL(url)
+  const { width, height } = image.getSize()
+  const to =
+    Math.min(width, height) <= ART
+      ? url
+      : `data:image/jpeg;base64,${(width > height ? image.resize({ height: ART }) : image.resize({ width: ART })).toJPEG(88).toString('base64')}`
+  art = { from: url, to }
+  return to
+}
+
+/** Sets what is playing and tells every window. */
+const setNowPlaying = (next: NowPlaying | null) => {
+  current = next && { ...next, thumbnailUrl: smallArt(next.thumbnailUrl) }
+  for (const window of BrowserWindow.getAllWindows()) window.webContents.send('nowplaying:changed', current)
+}
 
 const COMMANDS = { play: 0, pause: 1, 'play-pause': 2, next: 4, previous: 5 } as const
 export type TransportKey = keyof typeof COMMANDS
@@ -75,7 +112,11 @@ const start = () => {
   })
 }
 
-export const startMacNowPlaying = start
+export function startMacNowPlaying() {
+  // The renderer asks once on mount; after that it listens.
+  ipcMain.handle('nowplaying:get', () => current)
+  start()
+}
 
 export function stopMacNowPlaying() {
   stopped = true

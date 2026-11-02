@@ -131,7 +131,7 @@ const Ear: React.FC<{ side: 'left' | 'right'; notchStyle: NotchStyle }> = ({ sid
   )
 }
 
-/** Closes deskNotch until it is opened again from the Start menu. */
+/** Closes deskNotch until it is opened again from the Applications folder. */
 const QuitButton: React.FC = () => (
   <RailButton label="Close CatNotch" onClick={() => window.bridge?.send('app:quit')}>
     <Power size={11} strokeWidth={2.2} />

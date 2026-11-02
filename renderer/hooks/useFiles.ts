@@ -78,7 +78,7 @@ export function useFileList(key: 'shelf' | 'pins') {
   return { items, add, remove, clear }
 }
 
-/** Windows' recent files, read while `enabled`. */
+/** Recent files from Spotlight, read while `enabled`. */
 export function useRecentFiles(enabled: boolean) {
   const [items, setItems] = useState<FileItem[] | null>(null)
 

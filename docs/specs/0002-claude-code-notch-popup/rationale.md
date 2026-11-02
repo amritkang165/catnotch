@@ -8,7 +8,7 @@ The notch already opens on its own for things that need you: a due reminder, a n
 
 Claude Code can call out to other programs at key moments through hooks, configured in `~/.claude/settings.json`. One of them, `PermissionRequest`, fires just before the terminal prompt and can return a decision. A hook can be a plain web request (`type: "http"`), which fits an Electron app that already runs a main process. The same settings file is read by the CLI and by the VS Code extension, so one setup covers both.
 
-Constraints that shape the design: the popup can approve commands on your machine, so only Claude may be able to talk to it; the notch must never steal keyboard focus (a stray Enter must not approve anything); the app runs on Windows and macOS; and failure of any part must leave Claude's own prompt working, never a frozen session. Doing nothing means users keep missing prompts, and Claude sits idle.
+Constraints that shape the design: the popup can approve commands on your machine, so only Claude may be able to talk to it; the notch must never steal keyboard focus (a stray Enter must not approve anything); the app runs on macOS; and failure of any part must leave Claude's own prompt working, never a frozen session. Doing nothing means users keep missing prompts, and Claude sits idle.
 
 ## Options considered
 
@@ -17,7 +17,7 @@ Constraints that shape the design: the popup can approve commands on your machin
 DeskNotch listens on `127.0.0.1` and Claude's hooks call it with a secret token. Permission requests come in on one path, questions on another. The notch holds the request open until you click, then replies with the decision.
 
 **Pros**:
-- One entry per event, no script to ship, and identical on Windows and macOS.
+- One entry per event, and no script to ship.
 - Can answer, not only announce.
 - Failure falls through to Claude's normal prompt.
 
@@ -39,18 +39,18 @@ Use Claude's `Notification` hook to say "Claude needs you", and answer in the te
 
 ### Option 3: Command hook with a socket or named pipe
 
-A small script run by Claude forwards the event to DeskNotch over a Unix socket (macOS) or named pipe (Windows).
+A small script run by Claude forwards the event to DeskNotch over a Unix socket.
 
 **Pros**:
 - No open network port.
 
 **Cons**:
-- Two transports and a script to ship, update and keep working on both systems.
+- A script to ship, update and keep working.
 - A shell script on the hot path of every permission request.
 
 ## Rationale
 
-The point of the feature is to answer without switching windows, which rules out Option 2. Between 1 and 3, a web hook is one setting entry on both systems and needs no script, while Option 3 needs two transports and a script that must keep working on every Claude update. The open port is the real cost, and it is answered by binding to `127.0.0.1` only, a random secret token, a `Host` check, and a hard cap on size and count.
+The point of the feature is to answer without switching windows, which rules out Option 2. Between 1 and 3, a web hook is one setting entry and needs no script, while Option 3 needs a script that must keep working on every Claude update. The open port is the real cost, and it is answered by binding to `127.0.0.1` only, a random secret token, a `Host` check, and a hard cap on size and count.
 
 Safety rests on one rule: every failure ends in Claude's normal prompt. Hook failures, timeouts and an empty reply all fall through in Claude's documented behaviour, so a bug here makes the feature quiet, never a frozen session. That is also why the popup never takes focus, has an "Ask in terminal" button, and times out at 30 seconds.
 

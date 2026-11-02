@@ -11,7 +11,7 @@
  * GitHub's HTTPS alone; sign the builds and set `publisherName` to have
  * electron-updater verify them too.
  */
-import { app, BrowserWindow, ipcMain, powerMonitor } from 'electron'
+import { app, BrowserWindow, ipcMain } from 'electron'
 // A namespace import, read both ways, because the two builds load this
 // CommonJS package differently and each broke on one form:
 // - packaged (real ES module import): its exports sit under `default`, and a
@@ -24,21 +24,13 @@ type Updater = typeof import('electron-updater')
 const { autoUpdater } = ((electronUpdater as unknown as { default?: Updater }).default ?? electronUpdater) as Updater
 
 export type UpdateState =
-  | { status: 'dev' | 'store' | 'idle' | 'checking' | 'none' | 'error'; version: string }
-  | { status: 'downloading'; version: string; next: string; percent: number }
-  | { status: 'ready'; version: string; next: string }
-  /** macOS: a newer release exists; it cannot install itself, so Settings shows the brew line. */
+  | { status: 'dev' | 'idle' | 'checking' | 'none' | 'error'; version: string }
+  /** A newer release exists; it cannot install itself, so Settings shows the brew line. */
   | { status: 'available'; version: string; next: string }
 
 /** How often a running app looks again. */
 const EVERY = 6 * 60 * 60 * 1000
-/** How long the PC must go without mouse or keyboard before a downloaded update installs. */
-const AWAY_SECONDS = 60
-
-/** The Microsoft Store build: the Store installs its updates, so this stays out of its way. */
-const store = process.windowsStore === true
-
-let state: UpdateState = { status: store ? 'store' : app.isPackaged ? 'idle' : 'dev', version: app.getVersion() }
+let state: UpdateState = { status: app.isPackaged ? 'idle' : 'dev', version: app.getVersion() }
 
 const publish = (next: UpdateState) => {
   state = next
@@ -46,7 +38,7 @@ const publish = (next: UpdateState) => {
 }
 
 const check = () => {
-  if (!app.isPackaged || store) return
+  if (!app.isPackaged) return
   void autoUpdater.checkForUpdates().catch(() => publish({ status: 'error', version: app.getVersion() }))
 }
 
@@ -54,31 +46,14 @@ export function startUpdater() {
   ipcMain.handle('update:get', () => state)
   ipcMain.handle('update:check', () => check())
 
-  if (!app.isPackaged || store) return
+  if (!app.isPackaged) return
   const version = app.getVersion()
-  // macOS builds are unsigned, so an update cannot install itself there.
-  autoUpdater.autoDownload = process.platform !== 'darwin'
-  autoUpdater.autoInstallOnAppQuit = process.platform !== 'darwin'
+  // The build is unsigned, so an update cannot install itself: only tell.
+  autoUpdater.autoDownload = false
+  autoUpdater.autoInstallOnAppQuit = false
   autoUpdater.on('checking-for-update', () => publish({ status: 'checking', version }))
   autoUpdater.on('update-not-available', () => publish({ status: 'none', version }))
-  autoUpdater.on('update-available', (info) =>
-    publish(process.platform === 'darwin' ? { status: 'available', version, next: info.version } : { status: 'downloading', version, next: info.version, percent: 0 }),
-  )
-  autoUpdater.on('download-progress', (p) =>
-    publish({ status: 'downloading', version, next: state.status === 'downloading' ? state.next : '', percent: Math.round(p.percent) }),
-  )
-  // Downloaded: installs on its own once nobody is using the PC, silently, and
-  // the app starts again by itself afterwards. No button to press.
-  let away: ReturnType<typeof setInterval> | undefined
-  autoUpdater.on('update-downloaded', (info) => {
-    publish({ status: 'ready', version, next: info.version })
-    clearInterval(away)
-    away = setInterval(() => {
-      if (powerMonitor.getSystemIdleTime() < AWAY_SECONDS) return
-      clearInterval(away)
-      autoUpdater.quitAndInstall(true, true)
-    }, 15_000)
-  })
+  autoUpdater.on('update-available', (info) => publish({ status: 'available', version, next: info.version }))
   autoUpdater.on('error', () => publish({ status: 'error', version }))
 
   // Not at launch, with everything else starting: a minute in, then every six hours.

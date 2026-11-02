@@ -1,6 +1,6 @@
 # CatNotch
 
-A notch style bar at the top of the screen (macOS and Windows) built with Electron and Next.js (via nextron). Hover it and it opens into music, a focus timer, tasks, a file shelf, AI usage, a calendar and Claude Code prompts. Version and release details are in `package.json` and `README.md`.
+A notch style bar at the top of the screen (macOS only) built with Electron and Next.js (via nextron). Hover it and it opens into music, a focus timer, tasks, a file shelf, AI usage, a calendar and Claude Code prompts. Version and release details are in `package.json` and `README.md`.
 
 ## Run, build, test
 
@@ -33,9 +33,23 @@ A notch style bar at the top of the screen (macOS and Windows) built with Electr
 ## Testing rules
 
 - Framework is vitest (`test-preferences.json`). Tests sit beside the source as `*.test.ts(x)`.
-- `vitest.config.mts` only includes `renderer/**` today. Add `main/**` there when you add main process tests.
+- `vitest.config.mts` includes `renderer/**` and `main/**`.
 - Run one file with `npx vitest run path/to/file.test.ts`.
 
 ## Specs
 
 New work gets the next numbered file in `docs/specs/` (`/architect` writes it). Keep specs small and name them `NNNN-short-name.md`.
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in GitHub Issues on `thecharydev/catnotch` (`origin`, via `gh`). See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default five-label vocabulary (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `GLOSSARY.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.

@@ -13,11 +13,11 @@ import { isTerminalInFront } from './fullscreen'
 const raw = (app: string) => `0,0,0,1920,1080,${app}`
 
 describe('isTerminalInFront', () => {
-  it.each(['com.apple.Terminal', 'com.googlecode.iterm2', 'dev.warp.Warp-Stable', 'WindowsTerminal', 'pwsh', 'CMD'])('%s counts as a terminal, any case', (app) => {
+  it.each(['com.apple.Terminal', 'com.googlecode.iterm2', 'dev.warp.Warp-Stable'])('%s counts as a terminal, any case', (app) => {
     expect(isTerminalInFront(raw(app), 'cli')).toBe(true)
   })
 
-  it.each(['com.google.Chrome', 'chrome', 'com.apple.Safari', 'Code'])('%s is not a terminal', (app) => {
+  it.each(['com.google.Chrome', 'com.apple.Safari', 'com.microsoft.VSCode'])('%s is not a terminal', (app) => {
     expect(isTerminalInFront(raw(app), 'cli')).toBe(false)
   })
 

@@ -10,7 +10,6 @@ type Addon = {
 }
 
 const load = (): Addon | null => {
-  if (process.platform !== 'darwin') return null
   try {
     const root = app.isPackaged ? process.resourcesPath : path.join(process.cwd(), 'native', 'mac', 'build')
     // dlopen, not require: the bundler rewrites require and cannot see this file.

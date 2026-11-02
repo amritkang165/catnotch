@@ -7,12 +7,12 @@ import { registerLimitsIpc } from './limits'
 import { registerMediaIpc } from './media'
 import { registerFilesIpc } from './files'
 import { registerPrivacyIpc } from './privacy'
-import { registerAppsIpc } from './apps'
+import { registerMacAppsIpc } from '../mac/apps'
 import { registerUsageIpc } from './usage'
 import { registerBatteryIpc } from './battery'
 import { registerDisplayIpc } from './display'
-import { registerDesktimeIpc } from './desktime'
 import { registerClaudeIpc } from './claude'
+import { registerCalendarIpc } from './calendar'
 
 export function registerIpc() {
   registerStoreIpc()
@@ -23,13 +23,11 @@ export function registerIpc() {
   registerMediaIpc()
   registerFilesIpc()
   registerPrivacyIpc()
-  registerAppsIpc()
+  registerMacAppsIpc()
   registerUsageIpc()
   registerBatteryIpc()
   registerDisplayIpc()
-  registerDesktimeIpc()
   registerClaudeIpc()
-  // macOS only: the module is not even loaded on Windows.
-  if (process.platform === 'darwin') require('./calendar').registerCalendarIpc()
+  registerCalendarIpc()
 }
 

@@ -18,16 +18,16 @@ export const TASK_WIDTH = 200
 
 /** Now playing: the art fills the tile's height, the words and controls beside it.
  *  `tint` is the art's own colour, so the card glows with the cover. */
-/** A player's id as a name people know: "Spotify", "Chrome", "Edge"… */
+/** A player's bundle id as a name people know: "Spotify", "Chrome", "Edge"… */
 const playerName = (id: string) => {
   const lower = id.toLowerCase()
   const known: [string, string][] = [
-    ['spotify', 'Spotify'], ['chrome', 'Chrome'], ['msedge', 'Edge'], ['firefox', 'Firefox'], ['brave', 'Brave'],
-    ['opera', 'Opera'], ['vlc', 'VLC'], ['zune', 'Media Player'], ['music', 'Music'], ['applemusic', 'Apple Music'],
+    ['spotify', 'Spotify'], ['chrome', 'Chrome'], ['edgemac', 'Edge'], ['safari', 'Safari'], ['firefox', 'Firefox'], ['brave', 'Brave'],
+    ['opera', 'Opera'], ['vlc', 'VLC'], ['music', 'Music'], ['applemusic', 'Apple Music'],
   ]
   const hit = known.find(([key]) => lower.includes(key))
   if (hit) return hit[1]
-  const bare = id.split('!')[0].replace(/\.exe$/i, '').split('.').pop() ?? id
+  const bare = id.split('.').pop() ?? id
   return bare.charAt(0).toUpperCase() + bare.slice(1)
 }
 
@@ -36,7 +36,7 @@ const playerName = (id: string) => {
  * spot. Paused, the fill dims and the dot shrinks. With no length known
  * (most browser tabs), a soft light sweeps along it while playing.
  *
- * No minutes and seconds: Windows reports the position only every few
+ * No minutes and seconds: the player reports the position only every few
  * seconds (browsers hardly at all), so a clock here jumped about.
  */
 const ProgressLine: React.FC<{ progress: number | null; playing: boolean; tint: string }> = ({ progress, playing, tint }) => {

@@ -130,7 +130,7 @@ Ordered as a tracer bullet: prove the position first, then thicken.
 
 **Neutral**:
 - The Shrink over browsers setting now only affects displays without a cutout.
-- Idle closed notch is always black on a cutout, so Glass and Mica styles show only when open.
+- Idle closed notch is always black on a cutout, so the Glass style shows only when open.
 
 ## Follow-up
 
