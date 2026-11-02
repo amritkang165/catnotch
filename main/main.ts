@@ -1,14 +1,11 @@
 import path from 'path'
 import { app, BrowserWindow, ipcMain, screen } from 'electron'
 import serve from 'electron-serve'
-import { startSmtc, stopSmtc } from './smtc'
 import { startHelper, stopHelper } from './mac/helper'
 import { attachGlass, applyGlass, cleanShapes, glassAvailable } from './mac/vibrancy'
 import { startMacNowPlaying, stopMacNowPlaying } from './mac/nowplaying'
 import { registerIpc } from './ipc'
-import { stopMediaIpc } from './ipc/media'
 import { stopPrivacyIpc } from './ipc/privacy'
-import { stopUsageIpc } from './ipc/usage'
 import { startScreenshotWatch, stopScreenshotWatch } from './ipc/screenshots'
 import { setupNotchWindows } from './display'
 import { applyContentProtection } from './ipc/system'
@@ -44,15 +41,12 @@ const createNotchWindow = (bounds: Rect) => {
     resizable: false,
     movable: false,
     fullscreenable: false,
-    skipTaskbar: true,
-    // Windows: a tool window never lists on the taskbar or in Alt+Tab, even
-    // after it takes focus (plain skipTaskbar can be lost then). macOS: a
-    // panel floats over other apps without activating CatNotch.
-    type: process.platform === 'darwin' ? 'panel' : 'toolbar',
+    // A panel floats over other apps without activating CatNotch.
+    type: 'panel',
     alwaysOnTop: true,
     // macOS pushes a window down below the menu bar (and the cutout); this
     // stops that clamp so the strip can sit at the very top of the display.
-    enableLargerThanScreen: process.platform === 'darwin',
+    enableLargerThanScreen: true,
     webPreferences: {
       preload: path.join(import.meta.dirname, 'preload.js'),
       // The notch is a panel that is never the active app: without this, timers and animation frames can be throttled as "background", and the first hovers open slowly.
@@ -63,8 +57,8 @@ const createNotchWindow = (bounds: Rect) => {
   window.setAlwaysOnTop(true, 'screen-saver')
   // visibleOnFullScreen: stay over a full screen Space too (macOS only).
   window.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
-  // macOS: the strip is not an app window, so Mission Control should not list it.
-  if (process.platform === 'darwin') window.setHiddenInMissionControl(true)
+  // The strip is not an app window, so Mission Control should not list it.
+  window.setHiddenInMissionControl(true)
 
   // macOS clamps a frame below the menu bar until the window is high enough,
   // so put it at the top edge again now that it is, and whenever it is shown.
@@ -143,18 +137,14 @@ const createNotchWindow = (bounds: Rect) => {
 }
 
 app.whenReady().then(() => {
-  if (process.platform === 'win32') {
-    app.setAppUserModelId('com.devezio.desknotch')
-  } else if (process.platform === 'darwin') {
-    // No Dock icon or app switcher entry; the packaged app also sets LSUIElement.
-    app.dock?.hide()
-  }
+  // No Dock icon or app switcher entry; the packaged app also sets LSUIElement.
+  app.dock?.hide()
 
   ipcMain.on('notch:bounds', (event, bounds: Rect[] | Rect) => {
     notchBounds.set(event.sender.id, Array.isArray(bounds) ? bounds : [bounds])
   })
 
-  // Glass on macOS: the renderer sends the shapes of its glass surfaces and the
+  // Glass: the renderer sends the shapes of its glass surfaces and the
   // native blur view is cut to them (spec 0013).
   ipcMain.handle('glass:native', () => glassAvailable)
   ipcMain.on('notch:glass', (event, shapes: unknown) => {
@@ -169,8 +159,6 @@ app.whenReady().then(() => {
     if (!window || window.isDestroyed()) return
     if (isPinned) window.focus()
     else window.blur()
-    // Focus can put a window back on the taskbar; keep it off.
-    window.setSkipTaskbar(true)
   })
 
   // A notch that just loaded asks whether it starts tucked behind a browser.
@@ -185,30 +173,24 @@ app.whenReady().then(() => {
   registerIpc()
   registerSettingsWindow()
   startUpdater()
-  startSmtc()
-  if (process.platform === 'darwin') {
-    startHelper()
-    startMacNowPlaying()
-  }
+  startHelper()
+  startMacNowPlaying()
   startScreenshotWatch()
   setupNotchWindows(createNotchWindow, STRIP_HEIGHT)
-  // Its PowerShell compiles C# on start; let the notch paint first.
+  // Let the notch paint first.
   setTimeout(checkAndApplyFullscreenState, 2000)
 })
 
-// Quit from anywhere (Cmd+Q, the app's own Quit) stops the macOS children too.
+// Quit from anywhere (Cmd+Q, the app's own Quit) stops the helper children too.
 app.on('before-quit', () => {
   stopHelper()
   stopMacNowPlaying()
 })
 
 app.on('window-all-closed', () => {
-  stopSmtc()
   stopHelper()
   stopMacNowPlaying()
-  stopMediaIpc()
   stopPrivacyIpc()
-  stopUsageIpc()
   stopScreenshotWatch()
   stopFullscreenWatch()
   app.quit()

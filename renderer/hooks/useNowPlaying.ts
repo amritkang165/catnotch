@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-/** Mirrors NowPlaying in main/smtc.ts. */
+/** Mirrors NowPlaying in main/mac/nowplaying.ts. */
 export interface NowPlaying {
   sourceAppId: string
   title: string
@@ -25,13 +25,13 @@ export function useNowPlaying(): NowPlaying | null {
   useEffect(() => {
     // 1. Whatever is playing right now.
     window.bridge
-      ?.invoke<NowPlaying | null>('smtc:get')
+      ?.invoke<NowPlaying | null>('nowplaying:get')
       .then(setNowPlaying)
       .catch(() => setNowPlaying(null))
 
     // 2. Every change from here on. `on` returns its own unsubscribe.
     const unsubscribe = window.bridge?.on<NowPlaying | null>(
-      'smtc:now-playing',
+      'nowplaying:changed',
       setNowPlaying
     )
 

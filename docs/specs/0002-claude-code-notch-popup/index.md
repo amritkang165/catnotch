@@ -30,7 +30,7 @@ When Claude Code (in the terminal or in the VS Code extension) wants to run a co
 - **AC-11**: If port 47821 is taken, DeskNotch uses the next free port and rewrites its own hook entries to match, without asking again.
 - **AC-12**: If Claude drops the connection before you answer (it moved on, or the session ended), that popup disappears.
 - **AC-13**: A single question from Claude produces one popup, not two, even if both hooks fire for it.
-- **AC-14**: Everything above works on Windows and macOS, honours `CLAUDE_CONFIG_DIR` when set, and works for sessions started from the terminal and from the VS Code extension.
+- **AC-14**: Everything above works on macOS, honours `CLAUDE_CONFIG_DIR` when set, and works for sessions started from the terminal and from the VS Code extension.
 
 ## Decision
 
@@ -168,7 +168,7 @@ No build approach is recorded for the project, so this uses end to end thin slic
 - [x] Build task 1 spike, run 2026-10-28 against Claude Code 2.1.312 with a throwaway local server: (a) the question reply shape in the spec works exactly as written (interactive CLI, Claude received the answer); (b) the permission hook fires for Bash in the CLI, Allow runs the command and Deny delivers "Denied from DeskNotch" to Claude; (c) the hook body also carries `permission_suggestions`, `prompt_id`, `tool_use_id` (questions only), unused here; (d) an `AskUserQuestion` call fired only the question route, so the permission route guard stays as a cheap safety net.
 - [ ] Still unverified, check by hand: the VS Code extension fires both hooks; a hook change reaches an already running session; the connection closes when you answer in the terminal first.
 - [x] Build tasks 2 to 7 built and checked on 2026-10-28. Checked with the real server code and the real Claude CLI: AC-1, 2, 3 (data), 4, 5, 7, 8, 9, 11, 12, 13 and AC-6. Checked in the running dev app through its debug port: the permission and question popups render, and clicking Allow, Ask in terminal and an answer sends the right reply.
-- [ ] Not yet checked by hand: AC-10 (popup over a real fullscreen app), AC-14 on Windows, the VS Code extension (see above), and the Settings toggle written into a real `~/.claude/settings.json` (it was exercised only on a temporary copy).
+- [ ] Not yet checked by hand: AC-10 (popup over a real fullscreen app), the VS Code extension (see above), and the Settings toggle written into a real `~/.claude/settings.json` (it was exercised only on a temporary copy).
 - [ ] While testing, the dev Electron app crashed three times (native SIGTRAP, reports in `~/Library/Logs/DiagnosticReports`) with the feature on, and could not be made to happen again on purpose (dropped connections, two requests at once and questions all passed). It did not crash in a 220 second run with the feature off. Watch for it; if it comes back, capture the report.
 - [ ] A later spec could add a "Claude finished" moment and an "Always allow" button, both left out on purpose.
 - [ ] This feature has no row in `docs/scope/` (no scope folder exists yet). Run `/scope` to enroll it if you want it tracked.

@@ -172,7 +172,7 @@ const Picker: React.FC<{ taken: string[]; onPick: (id: string) => void; onClose:
 export const APPS_ROW = 36
 
 /**
- * The apps you live in: Windows' own "most used" (by time in focus) or the
+ * The apps you live in: the Mac's "most used" (by time in focus) or the
  * favourites you picked, with a + to add more. Four are in view (two beside
  * the notch); more scroll, sideways under the notch and up and down beside it.
  */

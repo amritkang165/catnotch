@@ -23,14 +23,16 @@ export function useSettingsStore() {
               : (stored?.notchStyle as string) === 'mica'
                 ? 'black'
                 : (stored?.notchStyle ?? DEFAULT_SETTINGS.notchStyle),
+          // Screen time is gone: the clock stands in.
+          collapsedRight: (stored?.collapsedRight as string) === 'screen' ? 'time' : (stored?.collapsedRight ?? DEFAULT_SETTINGS.collapsedRight),
           // Focus lives in the companion now; the glance card is retired.
           showFocus: false,
           // Older settings kept a list of topics under another name; the first
           // one becomes the mode.
-          // The AI mode became Screen time, and Tasks became Reminder.
+          // Retired modes ('ai', and 'screen' from the removed Screen time) are the timer; Tasks became Reminder.
           companionMode:
-            ((stored?.companionMode as string) === 'ai'
-              ? 'screen'
+            (['ai', 'screen'].includes(stored?.companionMode as string)
+              ? 'focus'
               : (stored?.companionMode as string) === 'tasks'
                 ? 'reminder'
                 : stored?.companionMode) ??

@@ -19,7 +19,7 @@ const keepOnShelf = async (file: string) => {
  * A screenshot, just taken: the macOS corner thumbnail, in the notch. It
  * lands with a flash, like a shutter. Drag it straight into a chat or a
  * folder, keep it on the Shelf for later, or open it; left alone, the notch
- * folds away and the file stays where Windows saved it. Dealt with (kept,
+ * folds away and the file stays where macOS saved it. Dealt with (kept,
  * opened, dragged out), it calls `onDone` and the notch folds away at once.
  */
 export const CaptureView: React.FC<{ item: FileItem; accent: string; onDone: () => void }> = ({ item, accent, onDone }) => {

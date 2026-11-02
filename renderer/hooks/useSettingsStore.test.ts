@@ -48,13 +48,22 @@ describe('useSettingsStore', () => {
   })
 
   it.each([
-    [{ companionMode: 'ai' }, 'screen'],
+    [{ companionMode: 'ai' }, 'focus'],
+    [{ companionMode: 'screen' }, 'focus'],
     [{ companionMode: 'tasks' }, 'reminder'],
     [{ companionSays: ['music'] }, 'music'],
     [{}, DEFAULT_SETTINGS.companionMode],
   ])('migrates companion mode %j to %s', async (stored, mode) => {
     const { settings } = await load(stored)
     expect(settings().companionMode).toBe(mode)
+  })
+
+  it.each([
+    ['screen', 'time'],
+    ['ai', 'ai'],
+  ])('migrates the closed notch right side %s to %s', async (from, to) => {
+    const { settings } = await load({ collapsedRight: from })
+    expect(settings().collapsedRight).toBe(to)
   })
 
   it('always turns the retired Focus card off', async () => {

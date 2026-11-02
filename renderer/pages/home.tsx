@@ -7,7 +7,7 @@ import { AmbientVideo } from '../components/notch/AmbientVideo'
 import { CollapsedStatus, LOW_LEVEL, type Moment } from '../components/notch/CollapsedStatus'
 import { ViewRail, RailButton, type ViewDefinition } from '../components/notch/ViewSwitcher'
 import { applyNotchTheme } from '../lib/catppuccin'
-import { isMac, DOCK_SCALE } from '../components/widgets/SettingsPanel'
+import { DOCK_SCALE } from '../components/widgets/SettingsPanel'
 import { DeskView, DESK_WIDTH, DESK_HEIGHT } from '../components/widgets/DeskView'
 import { AppsRow } from '../components/widgets/AppsRow'
 import { useFocusLog } from '../hooks/useFocusLog'
@@ -38,7 +38,6 @@ import { usePrivacy } from '../hooks/usePrivacy'
 import { useHeadphones } from '../hooks/useHeadphones'
 import { useBattery } from '../hooks/useBattery'
 import { useNow } from '../hooks/useNow'
-import { useScreenTime } from '../hooks/useScreenTime'
 import { useCalendar, upcoming, visible, nextToday, untilText } from '../hooks/useCalendar'
 import { CalendarView, CALENDAR_WIDTH, calendarHeight } from '../components/widgets/CalendarView'
 
@@ -288,8 +287,6 @@ export default function HomePage() {
 
   useEffect(() => applyNotchTheme(settings), [settings])
 
-  // Screen time comes from DeskTime; without it installed the option stays off.
-  const screenTime = useScreenTime(settings.collapsedRight === 'screen' || (settings.showAvatar && settings.companionMode === 'screen'))
   // On a notched display the closed notch is only the cutout until there is an
   // event to show: it grows wings for these.
   const wingsActive = Boolean(
@@ -300,8 +297,8 @@ export default function HomePage() {
       privacy.camera ||
       (battery.supported && !battery.charging && battery.level <= LOW_LEVEL),
   )
-  const collapsedRight = settings.collapsedRight === 'screen' && !screenTime.installed ? 'time' : (settings.collapsedRight ?? 'time')
-  const companionMode = settings.companionMode === 'screen' && !screenTime.installed ? 'focus' : settings.companionMode
+  const collapsedRight = settings.collapsedRight ?? 'time'
+  const companionMode = settings.companionMode
 
   // A browser in front: the main process says when to tuck out of its tabs' way.
   const [tucked, setTucked] = useState(false)
@@ -319,7 +316,7 @@ export default function HomePage() {
   useEffect(() => {
     if (view !== 'claude') setChatId(null)
   }, [view])
-  const calendarOn = isMac && settings.showCalendar
+  const calendarOn = settings.showCalendar
   const calendar = useCalendar(calendarOn, view === 'calendar')
   const clock = useNow()
   const shownEvents = visible(calendar.events, settings.hiddenCalendarIds ?? [])
@@ -557,7 +554,6 @@ export default function HomePage() {
                           tasks={tasks}
                           reminders={reminders}
                           timer={timer}
-                          screenMs={screenTime.ms}
                           track={nowPlaying?.title ?? null}
                           playing={isPlayingAudio}
                           mode={companionMode}
@@ -687,7 +683,6 @@ export default function HomePage() {
                   flavor={flavor}
                   photo={photo}
                   right={collapsedRight}
-                  screenMs={screenTime.ms}
                   limits={companionLimits}
                   privacy={privacy}
                   battery={battery}

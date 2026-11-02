@@ -1,7 +1,7 @@
 # DeskNotch — design notes
 
 Notes on the decisions that shape this codebase, written down so they don't
-have to be re-derived later. How each feature talks to Windows is in
+have to be re-derived later. How each feature talks to macOS is in
 [HowItWorks.md](HowItWorks.md).
 
 ---
@@ -76,7 +76,7 @@ all. Without it the notch is permanently dead.
 
 ## 2. `setAlwaysOnTop(flag, level)`
 
-_The window-level ladder Electron exposes, why `screen-saver` is used, and why it does not help against exclusive-fullscreen games._
+_The window-level ladder Electron exposes, and why `screen-saver` is used._
 
 ### The levels
 
@@ -96,18 +96,22 @@ Lowest to highest:
 A third argument, `relativeLevel`, shifts a window N levels above the one named.
 macOS only.
 
-### The catch on Windows
+### Why `screen-saver`, and the other two calls
 
-**These are macOS window levels.** Windows has no equivalent ladder — it has
-roughly two states, topmost or not. Electron collapses the whole list onto that,
-so `floating` and `screen-saver` behave identically here.
+These are real macOS window levels. `screen-saver` is the top of the stack, so
+the notch stays above ordinary windows, the menu bar and the Dock.
 
-`screen-saver` is used anyway: it costs nothing, and it is the correct level if
-this ever runs on macOS.
+Two more calls go with it in `main.ts`:
 
-What this does *not* fix: a game in exclusive fullscreen bypasses the compositor
-entirely and will cover the notch no matter what level is set. That needs a
-different approach, not a higher level.
+- `setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })` keeps the
+  notch over a full screen Space as well. Without it the level alone does not
+  reach there.
+- `type: 'panel'` makes the window a panel, so it floats over other apps
+  without making CatNotch the active app.
+
+Whether the notch should show over a full screen app is a setting (Hide in
+fullscreen). `main/fullscreen.ts` hides the window when the helper reports a
+full screen app on the same display, and shows it again when that ends.
 
 ---
 
@@ -262,8 +266,7 @@ export function usePrivacy() {
 
 **Step 1** (`bridge.on`) wires up a listener so the hook re-renders whenever
 `main/ipc/privacy.ts` calls `webContents.send('privacy:state', …)` — for
-example, each time the PowerShell that polls ConsentStore reports a mic or
-camera change.
+example, each time the Swift helper reports a mic or camera change.
 
 **Step 2** (`bridge.invoke`) fetches the current snapshot immediately so the
 hook does not show empty state until the first push arrives. The two together
@@ -283,100 +286,56 @@ it leaks an `ipcRenderer` listener every time the component remounts.
 
 ---
 
-## 4. Why SMTC runs in a worker thread
+## 4. Why now playing runs in a child process
 
-_Why the media monitor can't run on the main thread, how the worker ↔ main message protocol works, and why the worker file isn't bundled by webpack._
+_Why the now-playing reader is a separate process, and how its lines become one state._
 
-`SMTCMonitor` blocks whatever thread it runs on. The main thread owns the
-window, so blocking it freezes the notch — and the renderer with it, since its
-messages arrive through main. The library's own docs are explicit about this.
-
-A worker does not make the blocking go away; it puts it somewhere nothing else
-is waiting.
-
-```
-WORKER THREAD           MAIN PROCESS            RENDERER
-smtc-worker.ts          smtc.ts                 useNowPlaying.ts
-
-SMTCMonitor             spawns the worker       useState
-parentPort              holds current track     listens
-                        webContents.send
-```
-
-This applies to every native feature still on the list — volume, Bluetooth,
-mic/camera. The question to ask each time is whether it blocks; if it does, it
-belongs in a worker.
-
-### Messages carry their own type
-
-Everything between worker and main travels on one `message` channel, so each
-payload names itself.
-
-**Request and reply** — main asks, worker answers:
+Reading what is playing needs Apple's private MediaRemote, which only Apple's
+own `/usr/bin/perl` is still allowed to use. CatNotch ships the
+`mediaremote-adapter` (in `native/mac/mediaremote-adapter`) and runs it under that
+perl. It is a child process, so it cannot block main, which owns the windows and
+relays every IPC message.
 
 ```
-main   → { type: 'getCurrentMediaSession', requestId: 7 }
-worker → { type: 'response', requestId: 7, result: {...} }
+CHILD PROCESS            MAIN PROCESS              RENDERER
+perl + adapter           main/mac/nowplaying.ts    useNowPlaying.ts
+
+stream, JSON lines       keeps the current state   useState
+                         webContents.send          listens
 ```
 
-`requestId` is what makes replies matchable. They arrive on the same channel as
-everything else, so without an id there is no way to tell which answer belongs
-to which question. The `pending` Map in `smtc.ts` holds a resolver per id.
+The same rule applies to every other slow native feature: if it can block, it
+belongs in a child process.
 
-**Push** — the worker reports a change nobody asked about:
+### Lines carry only what changed
 
-```
-worker → { type: 'session-media-changed', sourceAppId: 'Spotify.exe', ... }
-```
+The adapter prints one JSON line per change. A line marked `diff` holds only the
+keys that changed, and a key set to `null` has gone away. `nowplaying.ts` merges
+each line into one state object, drops the nulls, and turns the whole state into
+a track. Every line goes through the same merge, so the state cannot drift.
 
-No `requestId`, because there was no request.
+### The position is worked out in main
 
-### Change events are a trigger, not a payload
+The adapter says where the track was at a timestamp. Main adds the time since
+then while the track is playing, so the renderer gets where it is now.
 
-`smtc.ts` reads the `type` to separate replies from events, then ignores the
-event's contents and re-reads the whole session.
+### Album art is shrunk once per track
 
-That looks wasteful, and it is one extra round trip. But an event only carries
-what changed — `session-media-changed` brings title and artist, not playback
-state or timeline. Assembling state from partial events means getting the
-stitching right for every combination and ordering. Asking once for the
-complete session cannot drift.
+Art arrives as base64 in the line. Players can hand over a huge cover, and
+decoding it every time a card showing it appeared stalled the notch's animation.
+Main shrinks anything over 256 px to 256 px once, and keeps the result until the
+track changes.
 
-Track changes happen seconds apart at worst, so the extra trip costs nothing.
+### Controlling playback
 
-### Album art is converted in the worker
+Play, pause, next and previous go through the adapter's `send` command, one short
+`perl` call per click. Opening the player is `open -b <bundle id>`, after the id
+passes a plain-characters check.
 
-Thumbnails arrive as a raw `Buffer` with no media type. The worker sniffs PNG
-from the magic number, falls back to JPEG, and base64-encodes it into a data
-URL.
+### Restarts
 
-Both halves of that belong there: encoding a few hundred KB is synchronous work
-this thread exists to absorb, and the renderer gets something it can put
-straight into an `<img src>` rather than a Buffer it would have to convert.
-
-### Two files, not one
-
-A worker is always two pieces, and naming them badly is the easiest way to get
-confused:
-
-- `main/smtc-worker.ts` — runs *inside* the worker. Imports `SMTCMonitor`,
-  talks through `parentPort`.
-- `main/smtc.ts` — runs in main. Spawns the worker, talks through the `Worker`
-  object.
-
-`parentPort` and the `Worker` object are two ends of one connection. In main,
-`parentPort` is `null`, which is why the worker file guards on it: if it is
-missing, the file is being run somewhere it makes no sense.
-
-### The worker is not bundled
-
-Nextron's webpack knows about `main.ts` and `preload.ts` only, so a third entry
-point would compile to nothing. The file is copied to `app/` verbatim by
-`scripts/patch-nextron.cjs` and run directly — Electron 43 ships Node 24, which
-strips type annotations at runtime.
-
-The cost is that only erasable syntax works there: no enums, no parameter
-properties, no namespaces.
+If the adapter exits, main clears the state (the media card goes away) and starts
+it again after a second, up to 3 crashes.
 
 ---
 
@@ -483,20 +442,21 @@ attribute and a re-check every 250 ms while open.
 
 ## 6c. Materials
 
-_Why the three styles (Default, Mica, Glass) are drawn in the renderer rather than handled by the OS, and what Glass costs._
+_Why the two styles (Default, Glass) are drawn the way they are, and what Glass costs._
 
-The window is transparent, but Electron cannot blur what is behind part of a
-window, and Windows' own acrylic covers the whole window (here, the whole top
-of the screen). So the materials are drawn:
+The window is transparent, but the page itself cannot blur what is behind it (CSS
+`backdrop-filter` only sees our own page). So Glass has two routes:
 
-- **Mica** paints the wallpaper file Windows keeps, blurred, sized to the
-  display and shifted by the surface's position, which is how Windows 11's
-  Mica works too.
-- **Glass** shows a live screen capture, blurred, the same way. The window is
-  excluded from capture (`setContentProtection`), so the capture shows what is
-  behind it. One capture is shared by every surface (reference-counted), at
-  15 fps, while Glass is on. The cost: the notch vanishes from screenshots and
-  screen shares in that mode.
+- **Native blur.** A small native addon (`main/mac/vibrancy.ts`,
+  `native/mac/vibrancy/`) adds a macOS blur view to the window and cuts it to
+  the shapes the renderer reports (the notch, the dock, the apps tray).
+- **Capture fallback.** If the addon cannot load, the renderer shows a live screen
+  capture, blurred, positioned per surface. One capture is shared by every
+  surface (reference-counted), at 15 fps, while Glass is on.
+
+Glass needs the Screen Recording permission. The window is excluded from capture
+(`setContentProtection`), so a capture shows what is behind it. The cost: the
+notch vanishes from screenshots and screen shares while Glass is on.
 
 Only the background changes with the style; readings, tints and accents keep
 their own colours.
@@ -510,20 +470,33 @@ main/
   main.ts           window, hit testing, the cursor feed, lifecycle
   preload.ts        the renderer's bridge
   store.ts          the JSON file, and nothing else
-  smtc.ts           media host
-  smtc-worker.ts    media worker
+  display.ts        one notch window per display
+  fullscreen.ts     hide in fullscreen, tuck for browsers, terminal check
+  settingsWindow.ts the Settings window
+  updater.ts        looks for a newer release, reports it
+  mac/
+    helper.ts       the Swift helper: events, watches, questions
+    nowplaying.ts   the now-playing adapter, media keys, focus the player
+    spotlight.ts    recent files, screenshot folder (mdfind, mdls, defaults)
+    apps.ts         most used and installed apps, icons, launch
+    vibrancy.ts     the native Glass blur
   ipc/
     index.ts        registers every handler
     store.ts        get/set
     photo.ts        the file picker
-    system.ts       wallpaper and accent colour
-    settings.ts     start-on-boot
+    system.ts       Glass permission and capture source, hide in screenshots
+    settings.ts     start at login
     limits.ts       AI plan limits (Claude, Codex), cached and backed off
     media.ts        media keys, opening the player
     files.ts        the shelf: describe, thumbnails, open, reveal, drag out
-    screenshots.ts  the Screenshots folder watch, discard
-    privacy.ts      mic/camera in use, Wi-Fi, Bluetooth (one PowerShell)
-    apps.ts         most used (UserAssist), installed apps, icons, launch
+    screenshots.ts  the screenshot folder watch, discard, rename
+    privacy.ts      mic/camera in use, Wi-Fi, Bluetooth (from the helper)
+    battery.ts      charge and charging, from pmset
+    usage.ts        CPU, GPU and memory
+    calendar.ts     calendar events and join links (from the helper)
+    claude.ts       the Claude Code hook server and prompts
+    display.ts      the list of displays
+native/mac/         the Swift helper, the adapter and the blur addon
 ```
 
 `store.ts` had grown to hold the file, a photo picker, system stats and a login
@@ -540,11 +513,11 @@ else is touched, and no file grows because a feature had nowhere else to go.
 _Where to find the code for the most common edits, and two known gotchas._
 
 - **Notch appearance and animation** → `renderer/components/notch/NotchChassis.tsx`, hot-reloads.
-- **Now playing** → `main/smtc-worker.ts` (worker), `main/smtc.ts` (main),
+- **Now playing** → `main/mac/nowplaying.ts` (main),
   `renderer/hooks/useNowPlaying.ts` (renderer).
 - **A new IPC handler** → a file in `main/ipc/`, plus one line in its index.
 - **Corner radius** → the tokens at the top of `renderer/styles/globals.css`.
-- **Materials (Default, Mica, Glass)** → `Backdrop.tsx` in `renderer/components/notch/`, used by the notch, the dock and the apps tray; the Default colour is `CORNER_FILLS` in `NotchChassis.tsx`.
+- **Materials (Default, Glass)** → `Backdrop.tsx` in `renderer/components/notch/`, used by the notch, the dock and the apps tray; the Default colour is `CORNER_FILLS` in `NotchChassis.tsx`.
 - **Strip height, always-on-top, click-through** → `main/main.ts`, needs a restart.
 - **Padding inside the open notch** → `PAD` in `NotchChassis.tsx`; every view sizes itself from it.
 - **A moment that opens the notch by itself** → `peek(view, ms)` in `renderer/pages/home.tsx`.

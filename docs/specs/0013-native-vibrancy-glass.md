@@ -5,7 +5,7 @@
 
 ## Summary
 
-Glass on macOS stops capturing the screen. Instead, a real macOS blur view (vibrancy, the same frosted material the system uses for menus) sits behind the notch's web content and is cut to the exact shapes of the notch, its two ears, the tabs dock and the apps tray. You keep the full width strip window, so clicking, display handling, and the fullscreen tuck work as they do today. The blur is drawn by a small native piece (an addon, a compiled plugin Electron can load), and if it fails to load, Glass falls back to today's capture and its permission. Windows and the Transparent style do not change.
+Glass on macOS stops capturing the screen. Instead, a real macOS blur view (vibrancy, the same frosted material the system uses for menus) sits behind the notch's web content and is cut to the exact shapes of the notch, its two ears, the tabs dock and the apps tray. You keep the full width strip window, so clicking, display handling, and the fullscreen tuck work as they do today. The blur is drawn by a small native piece (an addon, a compiled plugin Electron can load), and if it fails to load, Glass falls back to today's capture and its permission. The Transparent style does not change.
 
 ## Context
 
@@ -36,7 +36,7 @@ Workspace: single repo, macOS only. Stack from the code: Electron 43, Next.js re
 - **AC-7**: With All displays each notch has its own blur. Switching the selected display, plugging in or unplugging a display, keeps a working blur and leaves no stray view.
 - **AC-8**: On a notched display, closed with nothing to show, the notch is pure black with no blur. Closed with wings, the wings show the blur and the cutout stays black. Without a cutout, the whole closed pill shows the blur.
 - **AC-9**: If the native piece cannot load (not macOS, missing file, or load error), Glass uses today's capture path and its permission gate exactly as in spec 0010.
-- **AC-10**: Windows, and the Transparent and Default styles on macOS, behave as before. Transparent starts no native view.
+- **AC-10**: The Transparent and Default styles behave as before. Transparent starts no native view.
 - **AC-11**: Nothing is sent or applied while no shape changes (closed and idle). The blur view is hidden when no glass surface is on screen.
 - **AC-12**: A packaged, ad hoc signed build on both arm64 and x64 loads the native piece and shows the blur.
 
@@ -161,7 +161,7 @@ An `ear` shape is the 8 point box; the addon fills only its concave quarter, sam
 
 **Key invariants**:
 - The native view is attached at most once per window and detached when the window closes.
-- A Windows build, a missing addon or any load error keeps `glass:native` false, and every code path takes the capture route.
+- A missing addon or any load error keeps `glass:native` false, and every code path takes the capture route.
 - Transparent never attaches a native view.
 
 **Security model**: no permission is requested for native Glass. The addon runs in the main process with the app's own privileges, reads nothing from other apps, and takes only shape numbers from the renderer. Main validates the list before passing it on (an array of at most 16 finite numbers per shape, ear values limited to the two sides) so a bad message cannot crash the addon.

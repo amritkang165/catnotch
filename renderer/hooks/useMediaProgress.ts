@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import type { NowPlaying } from './useNowPlaying'
 
 /**
- * Where the track is, 0–1. SMTC reports position only when it changes, which
+ * Where the track is, 0–1. The player reports position only when it changes, which
  * for most players is every few seconds; between reports the bar keeps
  * moving at real time while playing, so it never visibly stalls.
  */

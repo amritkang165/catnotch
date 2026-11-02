@@ -44,13 +44,13 @@ export interface Settings extends NotchTheme {
   dockSide: DockSide
   /** Views taken off the dock ('glance', 'desk', 'files'); Settings and the lock always stay. */
   hiddenViews: string[]
-  /** What the closed notch shows on its right; 'screen' needs ScreenWise installed. */
-  collapsedRight: 'time' | 'ai' | 'screen'
+  /** What the closed notch shows on its right. */
+  collapsedRight: 'time' | 'ai'
   /** Open the notch on each new screenshot. */
   catchScreenshots: boolean
-  /** The apps bar under the notch: Windows' most used, your favourites, or none. */
+  /** The apps bar under the notch: the most used, your favourites, or none. */
   deskApps: DeskApps
-  /** Favourite apps, by AppUserModelID, in the order they were added. */
+  /** Favourite apps, by .app path, in the order they were added. */
   favoriteApps: string[]
   /** The views the apps bar floats under: 'glance', 'desk', 'files' (the Shelf). */
   appsOn: string[]
@@ -275,18 +275,13 @@ interface SettingsPanelProps {
   onChange: (next: Settings) => void
   /** The AI limits found, to offer them one by one. */
   aiLimits: ProviderLimits[] | null
-  /** ScreenWise is installed, so the screen-time reading can be picked. */
-  desktimeInstalled: boolean
 }
-
-export const isMac = typeof navigator !== 'undefined' && navigator.userAgent.includes('Mac')
 
 /** The updater's state, as main/updater.ts reports it. */
 type UpdateState = {
-  status: 'dev' | 'store' | 'idle' | 'checking' | 'none' | 'error' | 'downloading' | 'ready' | 'available'
+  status: 'dev' | 'idle' | 'checking' | 'none' | 'error' | 'available'
   version: string
   next?: string
-  percent?: number
 }
 
 /** Version, update status, and the one thing to do about it. */
@@ -389,20 +384,16 @@ const UpdateRow: React.FC = () => {
   if (!update) return null
   const detail = {
     dev: 'Updates run in the installed app',
-    store: 'Updates come from the Microsoft Store',
     idle: undefined,
     checking: 'Checking for updates…',
     none: 'Up to date',
     error: "Couldn't check for updates",
-    downloading: `Downloading ${update.next ?? ''} · ${update.percent ?? 0}%`,
-    // It installs itself once the PC is left alone for a minute; nothing to press.
-    ready: `Version ${update.next} installs when you step away`,
     available: `Version ${update.next} is out. Run: brew upgrade --cask desknotch`,
   }[update.status]
-  const busy = update.status === 'checking' || update.status === 'downloading' || update.status === 'dev'
+  const busy = update.status === 'checking' || update.status === 'dev'
   return (
     <Row title={`Version ${update.version}`} detail={detail}>
-      {update.status !== 'store' && update.status !== 'ready' && update.status !== 'available' && (
+      {update.status !== 'available' && (
         <button
           type="button"
           disabled={busy}
@@ -440,19 +431,16 @@ export interface DisplayInfo {
  * left, one section at a time on the right as grouped rows, and every row
  * saying in plain words what it changes.
  */
-export const SettingsPanel: React.FC<SettingsPanelProps> = ({ settings, onChange, aiLimits, desktimeInstalled }) => {
+export const SettingsPanel: React.FC<SettingsPanelProps> = ({ settings, onChange, aiLimits }) => {
   const set = <K extends keyof Settings>(key: K, value: Settings[K]) => onChange({ ...settings, [key]: value })
   const { photo, pick } = usePhoto()
   const [section, setSection] = useState<SectionId>('notch')
   const [displays, setDisplays] = React.useState<DisplayInfo[]>([])
-  // The Store build starts with Windows through Windows' own Startup page.
-  const [store, setStore] = useState(false)
   /** Set when Glass was refused (macOS Screen Recording): the style stays Default. */
   const [glassNote, setGlassNote] = useState(false)
   const [nativeGlass, setNativeGlass] = useState(false)
   React.useEffect(() => {
     void glassNative().then(setNativeGlass)
-    void window.bridge?.invoke<boolean>('app:is-store').then((s) => setStore(Boolean(s)))
   }, [])
 
   React.useEffect(() => {
@@ -486,7 +474,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ settings, onChange
   const hiddenViews = settings.hiddenViews ?? []
   const [calendars, setCalendars] = useState<{ id: string; title: string; account: string }[]>([])
   useEffect(() => {
-    if (isMac && settings.showCalendar) void window.bridge?.invoke<typeof calendars>('calendar:calendars').then((list) => setCalendars(list ?? []))
+    if (settings.showCalendar) void window.bridge?.invoke<typeof calendars>('calendar:calendars').then((list) => setCalendars(list ?? []))
   }, [settings.showCalendar])
   const hiddenCalendars = settings.hiddenCalendarIds ?? []
 
@@ -525,23 +513,21 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ settings, onChange
           >
             {card('showAiUsage', 'AI usage')}
           </Row>
-          {isMac && (
-            <Row
-              title="Calendar"
-              detail="Today and tomorrow from your Mac's Calendar"
-              below={
-                settings.showCalendar && calendars.length > 0 ? (
-                  <Chips
-                    options={calendars.map((c) => ({ id: c.id, label: c.account ? `${c.title} · ${c.account}` : c.title }))}
-                    value={calendars.map((c) => c.id).filter((id) => !hiddenCalendars.includes(id))}
-                    onToggle={(id) => set('hiddenCalendarIds', hiddenCalendars.includes(id) ? hiddenCalendars.filter((x) => x !== id) : [...hiddenCalendars, id])}
-                  />
-                ) : undefined
-              }
-            >
-              <Switch label="Calendar" on={settings.showCalendar} onChange={(v) => set('showCalendar', v)} />
-            </Row>
-          )}
+          <Row
+            title="Calendar"
+            detail="Today and tomorrow from your Mac's Calendar"
+            below={
+              settings.showCalendar && calendars.length > 0 ? (
+                <Chips
+                  options={calendars.map((c) => ({ id: c.id, label: c.account ? `${c.title} · ${c.account}` : c.title }))}
+                  value={calendars.map((c) => c.id).filter((id) => !hiddenCalendars.includes(id))}
+                  onToggle={(id) => set('hiddenCalendarIds', hiddenCalendars.includes(id) ? hiddenCalendars.filter((x) => x !== id) : [...hiddenCalendars, id])}
+                />
+              ) : undefined
+            }
+          >
+            <Switch label="Calendar" on={settings.showCalendar} onChange={(v) => set('showCalendar', v)} />
+          </Row>
         </Group>
       </>
     ),
@@ -637,10 +623,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ settings, onChange
             <Segmented
               id="mode"
               options={COMPANION_MODES}
-              value={settings.companionMode === 'screen' && !desktimeInstalled ? 'focus' : settings.companionMode}
+              value={settings.companionMode}
               onChange={(v) => set('companionMode', v)}
-              disabled={desktimeInstalled ? [] : ['screen']}
-              disabledTitle="Needs ScreenWise installed"
             />
           </Row>
           <Row title="Look around" detail="Follows what it is for with its eyes and leans">
@@ -669,29 +653,11 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ settings, onChange
               options={[
                 { id: 'time', label: 'Time' },
                 { id: 'ai', label: 'AI usage' },
-                { id: 'screen', label: 'Screen time' },
               ] as const}
-              // Picked earlier, then ScreenWise was uninstalled: the clock stands in.
-              value={settings.collapsedRight === 'screen' && !desktimeInstalled ? 'time' : (settings.collapsedRight ?? 'time')}
+              value={settings.collapsedRight ?? 'time'}
               onChange={(v) => set('collapsedRight', v)}
-              disabled={desktimeInstalled ? [] : ['screen']}
-              disabledTitle="Needs ScreenWise installed"
             />
           </Row>
-          {!desktimeInstalled && (
-            <Row title="Screen time" detail="Requires ScreenWise">
-              <button
-                type="button"
-                onClick={(event) => {
-                  halt(event)
-                  void window.bridge?.invoke('desktime:download')
-                }}
-                className="h-[22px] shrink-0 rounded-full bg-white px-2.5 text-[10.5px] font-medium text-black"
-              >
-                Get ScreenWise
-              </button>
-            </Row>
-          )}
           <Row title="Open on screenshot">
             <Switch label="Catch screenshots" on={settings.catchScreenshots ?? true} onChange={(v) => set('catchScreenshots', v)} />
           </Row>
@@ -766,7 +732,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ settings, onChange
               />
             </Row>
           ))}
-          {isMac && settings.showCalendar && (
+          {settings.showCalendar && (
             <Row title="Calendar">
               <Switch
                 label="Calendar tab"
@@ -934,24 +900,9 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ settings, onChange
           <ClaudeRow />
         </Group>
         <Group>
-          {store ? (
-            <Row title="Start with Windows" detail="Managed in Windows Settings">
-              <button
-                type="button"
-                onClick={(event) => {
-                  halt(event)
-                  void window.bridge?.invoke('settings:open-startup')
-                }}
-                className="h-[24px] shrink-0 rounded-full bg-white/[0.08] px-3 text-[11px] font-medium text-white/75 transition-colors hover:bg-white/[0.14] hover:text-white"
-              >
-                Open
-              </button>
-            </Row>
-          ) : (
-            <Row title={isMac ? 'Start at login' : 'Start with Windows'}>
-              <Switch label={isMac ? 'Start at login' : 'Start with Windows'} on={settings.startOnBoot} onChange={(v) => set('startOnBoot', v)} />
-            </Row>
-          )}
+          <Row title="Start at login">
+            <Switch label="Start at login" on={settings.startOnBoot} onChange={(v) => set('startOnBoot', v)} />
+          </Row>
           <Row title="Hide in fullscreen" detail="Videos, games and F11">
             <Switch label="Hide on Fullscreen" on={settings.hideOnFullscreen ?? true} onChange={(v) => set('hideOnFullscreen', v)} />
           </Row>

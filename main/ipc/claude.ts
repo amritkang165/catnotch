@@ -594,16 +594,17 @@ let claudeBin: string | null = null
 /** Where the claude program is. An app opened from Finder has a short PATH, so look in the usual places, then ask the login shell. */
 async function findClaude(): Promise<string | null> {
   if (claudeBin && fs.existsSync(claudeBin)) return claudeBin
-  const exe = process.platform === 'win32' ? 'claude.exe' : 'claude'
+  const exe = 'claude'
   const home = os.homedir()
   const places = [
     path.join(home, '.local', 'bin', exe),
     path.join(home, '.claude', 'local', exe),
-    ...(process.platform === 'darwin' ? ['/opt/homebrew/bin/claude', '/usr/local/bin/claude'] : []),
+    '/opt/homebrew/bin/claude',
+    '/usr/local/bin/claude',
     ...(process.env.PATH ?? '').split(path.delimiter).filter(Boolean).map((dir) => path.join(dir, exe)),
   ]
   claudeBin = places.find((p) => fs.existsSync(p)) ?? null
-  if (!claudeBin && process.platform !== 'win32') {
+  if (!claudeBin) {
     claudeBin = await new Promise<string | null>((resolve) =>
       execFile(process.env.SHELL || '/bin/zsh', ['-lc', 'command -v claude'], { timeout: 5000 }, (error, out) => {
         const found = error ? '' : out.trim().split('\n').pop() ?? ''

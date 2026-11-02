@@ -28,7 +28,7 @@ const middle = (name: string, max = 13) => {
 }
 
 /**
- * One file on the shelf: a preview of the file itself where Windows has one,
+ * One file on the shelf: a preview of the file itself where macOS has one,
  * its icon where not, and its name beneath. Click opens it, right-click shows
  * it in its folder, and dragging it out moves it — dropped somewhere else, it
  * leaves the shelf.

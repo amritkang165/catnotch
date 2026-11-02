@@ -1,10 +1,9 @@
 /**
- * Files for the desk's strip: details and icons for any path, Windows' own
- * recent-files list, opening and revealing, and dragging a file back out.
+ * Files for the desk's strip: details and icons for any path, the recent-files
+ * list from Spotlight, opening and revealing, and dragging a file back out.
  */
-import { app, ipcMain, nativeImage, screen, shell, type NativeImage } from 'electron'
+import { ipcMain, nativeImage, screen, shell, type NativeImage } from 'electron'
 import fs from 'fs'
-import os from 'os'
 import path from 'path'
 import { recentPaths } from '../mac/spotlight'
 
@@ -14,7 +13,7 @@ export interface FileItem {
   isDir: boolean
   icon: string | null
   /** A picture of the file itself — the image, a video frame, a PDF's first
-   *  page — where Windows has one. */
+   *  page — where macOS has one. */
   thumb: string | null
 }
 
@@ -25,11 +24,8 @@ const iconFor = async (file: string) => {
   const cached = icons.get(file)
   if (cached) return cached
   try {
-    // macOS: app.getFileIcon crashes the process natively, so ask for the thumbnail.
-    const image =
-      process.platform === 'darwin'
-        ? await nativeImage.createThumbnailFromPath(file, { width: 64, height: 64 })
-        : await app.getFileIcon(file, { size: 'normal' })
+    // app.getFileIcon crashes the process natively on macOS, so ask for the thumbnail.
+    const image = await nativeImage.createThumbnailFromPath(file, { width: 64, height: 64 })
     icons.set(file, image)
     return image
   } catch {
@@ -37,7 +33,7 @@ const iconFor = async (file: string) => {
   }
 }
 
-/** Windows' own thumbnail for a file, as Explorer shows it. Null where there is
+/** The system's own thumbnail for a file, as Finder shows it. Null where there is
  *  none (most documents and folders fall back to their icon). */
 const IMAGES = new Set(['.png', '.jpg', '.jpeg', '.bmp', '.gif', '.ico', '.webp'])
 
@@ -50,12 +46,12 @@ const thumbFor = async (file: string) => {
       return width > height ? image.resize({ height: 128 }) : image.resize({ width: 128 })
     }
   }
-  // Everything else: Windows' own thumbnail (video frames, PDF pages…).
+  // Everything else: the system's own thumbnail (video frames, PDF pages…).
   try {
     const image = await nativeImage.createThumbnailFromPath(file, { width: 128, height: 128 })
     return image.isEmpty() ? null : image
   } catch {
-    // Expected for most files: Windows has no cached thumbnail, so the icon stands in.
+    // Expected for most files: there is no thumbnail, so the icon stands in.
     return null
   }
 }
@@ -80,51 +76,14 @@ const describe = async (file: string): Promise<FileItem | null> => {
   }
 }
 
-const RECENT = path.join(process.env.APPDATA ?? path.join(os.homedir(), 'AppData', 'Roaming'), 'Microsoft', 'Windows', 'Recent')
-
-/**
- * What Windows itself lists as recent: the shortcuts in the Recent folder,
- * newest first, resolved to the files they point at. Folders and files that
- * have since moved are left out.
- */
+/** What Spotlight lists as recently opened: the files themselves, newest
+ *  first. Folders and files that have since moved are left out. */
 const recent = async (limit = 12): Promise<FileItem[]> => {
-  if (process.platform === 'darwin') {
-    const items: FileItem[] = []
-    // A few more than asked for: some will have moved since Spotlight saw them.
-    for (const file of await recentPaths(limit * 2)) {
-      if (items.length >= limit) break
-      const item = await describe(file)
-      if (item && !item.isDir) items.push(item)
-    }
-    return items
-  }
-  let entries: { lnk: string; at: number }[] = []
-  try {
-    const names = await fs.promises.readdir(RECENT)
-    entries = await Promise.all(
-      names
-        .filter((name) => name.toLowerCase().endsWith('.lnk'))
-        .map(async (name) => {
-          const lnk = path.join(RECENT, name)
-          return { lnk, at: (await fs.promises.stat(lnk)).mtimeMs }
-        }),
-    )
-  } catch {
-    return []
-  }
-  entries.sort((a, b) => b.at - a.at)
-
   const items: FileItem[] = []
-  for (const { lnk } of entries) {
+  // A few more than asked for: some will have moved since Spotlight saw them.
+  for (const file of await recentPaths(limit * 2)) {
     if (items.length >= limit) break
-    let target = ''
-    try {
-      target = shell.readShortcutLink(lnk).target
-    } catch {
-      continue
-    }
-    if (!target || items.some((item) => item.path === target)) continue
-    const item = await describe(target)
+    const item = await describe(file)
     if (item && !item.isDir) items.push(item)
   }
   return items
@@ -145,11 +104,10 @@ export function registerFilesIpc() {
     if (isPath(file)) shell.showItemInFolder(file)
   })
   // Dragging out: the renderer starts the gesture, the OS carries the real file.
-  // On Windows startDrag runs the system's drag loop and returns when the drag
-  // ends, so the reply says where the pointer let go — the renderer uses it to
-  // tell a drop elsewhere (take the file off the shelf) from a drop back home.
+  // The reply says where the pointer let go — the renderer uses it to tell a
+  // drop elsewhere (take the file off the shelf) from a drop back home.
   // One path, or several: "drag all" carries the whole shelf as one drag,
-  // which Explorer, chat apps and mail take as a multi-file drop.
+  // which Finder, chat apps and mail take as a multi-file drop.
   ipcMain.handle('files:drag', (event, which: unknown) => {
     const files = (Array.isArray(which) ? which : [which]).filter((f): f is string => isPath(f) && fs.existsSync(f))
     if (!files.length) return null

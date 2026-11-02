@@ -37,7 +37,7 @@ This is an ENHANCEMENT of 0002 (built, In Progress) on the existing Electron, Ne
 - **AC-11**: Turning on "Claude Code" writes the four new hook entries as well as the two from 0002, with the same preview, backup and removal rules (AC-1, AC-2 of 0002). If hooks are already installed but lack the new ones, Settings shows "Update hooks" and nothing changes until you confirm.
 - **AC-12**: The new session hooks never delay Claude: they get an empty reply at once. With DeskNotch closed or the switch off, Claude behaves as if the feature did not exist.
 - **AC-13**: The new route has the same guards as 0002 (correct token, own `Host`, `POST` only, body cap) and shows nothing on a refusal.
-- **AC-14**: Works on macOS and Windows, honours `CLAUDE_CONFIG_DIR`, and the transcript scan reads files only under `<config dir>/projects`.
+- **AC-14**: Works on macOS, honours `CLAUDE_CONFIG_DIR`, and the transcript scan reads files only under `<config dir>/projects`.
 
 ## Options considered
 

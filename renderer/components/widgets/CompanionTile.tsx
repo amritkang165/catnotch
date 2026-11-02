@@ -7,9 +7,7 @@ import { BellRing, ChevronRight, Moon, RotateCcw, Sun, X } from 'lucide-react'
 import { Tile, TileLabel } from '../ui/tile'
 import { ThinkingOrb } from 'thinking-orbs'
 import { ringFrame } from '../ui/complication'
-import { ScrollingText } from '../notch/ScrollingText'
 import { useNow } from '../../hooks/useNow'
-import { formatScreenTime } from '../../hooks/useScreenTime'
 import type { TaskStore } from '../../hooks/useTasks'
 import { inputTime, nextAt, untilLabel, whenLabel, type ReminderStore } from '../../hooks/useReminders'
 import type { Timer } from '../../hooks/useTimer'
@@ -24,12 +22,11 @@ export const COMPANION_REMINDER_WIDTH = 520
 
 /** What the companion is for. One at a time: each mode has its own look,
  *  its own motion and its own control. */
-export type CompanionMode = 'focus' | 'reminder' | 'time' | 'screen'
+export type CompanionMode = 'focus' | 'reminder' | 'time'
 export const COMPANION_MODES: { id: CompanionMode; label: string }[] = [
   { id: 'focus', label: 'Timer' },
   { id: 'reminder', label: 'Reminder' },
   { id: 'time', label: 'Clock' },
-  { id: 'screen', label: 'Screen time' },
 ]
 
 /** When the companion sleeps: late at night, when nothing is going on, or never. */
@@ -350,27 +347,6 @@ const TimeMode: React.FC<{ now: Date; accent: string; aim: Aim; expanded: boolea
 }
 
 /**
- * Screen time: today's total from ScreenWise as a big figure, the same count
- * ScreenWise's own dashboard shows.
- */
-const ScreenMode: React.FC<{ ms: number | null; aim: Aim }> = ({ ms, aim }) => {
-  const figure = useRef<HTMLSpanElement>(null)
-  aim.current = () => {
-    const r = figure.current?.getBoundingClientRect()
-    return r ? { x: r.left + r.width / 2, y: r.top + r.height / 2 } : null
-  }
-  return (
-    <div className="min-w-0">
-      <TileLabel>Screen time</TileLabel>
-      <span ref={figure} className="mt-1 block text-[28px] font-semibold leading-none tracking-[-0.04em] tabular-nums text-white">
-        {ms == null ? '—' : formatScreenTime(ms)}
-      </span>
-      <ScrollingText className="mt-2 text-[10.5px] leading-none text-t3">Today, from ScreenWise</ScrollingText>
-    </div>
-  )
-}
-
-/**
  * A short burst of life on a moment worth reacting to. Idle, the companion
  * only looks around: constant hopping and spinning was too much motion for
  * something that sits at the top of the screen all day.
@@ -592,8 +568,6 @@ interface CompanionTileProps {
   /** For reminder mode; the desk's companion, always in focus, goes without. */
   reminders?: ReminderStore
   timer: Timer
-  /** Today's screen time from ScreenWise, for screen mode. */
-  screenMs?: number | null
   /** The current track, if any: a new one is a moment to react to. */
   track: string | null
   playing: boolean
@@ -625,7 +599,6 @@ export const CompanionTile: React.FC<CompanionTileProps> = ({
   tasks,
   reminders,
   timer,
-  screenMs = null,
   track,
   playing,
   mode,
@@ -771,7 +744,6 @@ export const CompanionTile: React.FC<CompanionTileProps> = ({
               {mode === 'focus' && <div className="flex h-full items-center"><FocusMode timer={timer} minutes={minutes} accent={accent} open={open} onOpen={onToggle} /></div>}
               {mode === 'reminder' && reminders && <ReminderMode reminders={reminders} accent={accent} aim={aim} open={open} />}
               {mode === 'time' && <div className="flex h-full items-center"><TimeMode now={now} accent={accent} aim={aim} expanded={open} /></div>}
-              {mode === 'screen' && <div className="flex h-full items-center"><ScreenMode ms={screenMs} aim={aim} /></div>}
             </motion.div>
           </AnimatePresence>
         </div>
