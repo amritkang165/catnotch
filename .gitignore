@@ -9,3 +9,6 @@ next-env.d.ts
 /app
 /dist
 /native/mac/build
+
+# xcode
+xcuserdata
