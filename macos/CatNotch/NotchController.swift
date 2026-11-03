@@ -5,13 +5,17 @@ import CatNotchCore
 /// Everything is event driven: pointer monitors, screen changes, app and Space switches. No polling timer.
 @MainActor
 final class NotchController {
-    // ponytail: fixed until settings exist; the settings issue sets this from `selectedDisplayId`.
-    var selection = DisplaySelection.primary { didSet { sync() } }
+    private var selection: DisplaySelection { didSet { sync() } }
 
     private var panels: [UInt32: NotchPanel] = [:]
     private var foreground: ForegroundState?
 
-    init() {
+    init(store: CatNotchStore) {
+        selection = store.data.displaySelection
+        // Settings changes the rule through the store; every Notch follows live. Lives as long as the app.
+        _ = store.observe { [weak self] data in MainActor.assumeIsolated { // other settings share the store: only a real change re-syncs
+            if let self, data.displaySelection != self.selection { self.selection = data.displaySelection }
+        } }
         // Monitors live as long as the app. Global sees moves over other apps (panels ignore the mouse), local over ours.
         NSEvent.addGlobalMonitorForEvents(matching: .mouseMoved) { [weak self] _ in MainActor.assumeIsolated { self?.pointerMoved() } }
         NSEvent.addLocalMonitorForEvents(matching: .mouseMoved) { [weak self] event in MainActor.assumeIsolated { self?.pointerMoved() }; return event }
@@ -38,16 +42,13 @@ final class NotchController {
 
     private func pointerMoved() { panels.values.forEach { $0.update() } }
 
-    private static func id(of screen: NSScreen) -> UInt32? {
-        (screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber)?.uint32Value
-    }
-
+    
     /// Makes the panels match the display rule: adds, removes and resizes them.
     private func sync() {
         let screens = NSScreen.screens
         // The primary display is the one with the menu bar, first in the list.
-        guard let primary = screens.first.flatMap(Self.id) else { return }
-        let targets = Set(selection.targets(available: screens.compactMap(Self.id), primary: primary))
+        guard let primary = screens.first.flatMap(\.displayID) else { return }
+        let targets = Set(selection.targets(available: screens.compactMap(\.displayID), primary: primary))
 
         for (id, panel) in panels where !targets.contains(id) {
             panel.setHidden(true)
@@ -65,7 +66,7 @@ final class NotchController {
         if front.processIdentifier == ProcessInfo.processInfo.processIdentifier { return }
 
         let displays = NSScreen.screens.compactMap { screen in
-            Self.id(of: screen).map { DisplayBounds(id: $0, bounds: CGDisplayBounds($0)) }
+            screen.displayID.map { DisplayBounds(id: $0, bounds: CGDisplayBounds($0)) }
         }
         let list = (CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]]) ?? []
         let windows = list.compactMap { w -> WindowInfo? in

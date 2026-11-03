@@ -1,5 +1,5 @@
 /// Which displays get a Notch. Displays are identified by CGDirectDisplayID.
-public enum DisplaySelection: Equatable, Sendable {
+public enum DisplaySelection: Hashable, Sendable {
     case all
     case primary
     case chosen(UInt32)
@@ -18,5 +18,26 @@ public enum DisplaySelection: Equatable, Sendable {
         case .primary: [primary]
         case .chosen(let id): [available.contains(id) ? id : primary]
         }
+    }
+}
+
+extension DisplaySelection {
+    /// The saved form, the inverse of `init(setting:)`.
+    public var setting: String {
+        switch self {
+        case .all: "all"
+        case .primary: "primary"
+        case .chosen(let id): String(id)
+        }
+    }
+}
+
+extension StoreData {
+    /// The display rule, saved under the same `selectedDisplayId` key the Electron app used, so the import carries it.
+    public var displaySelection: DisplaySelection {
+        get {
+            if case .string(let s)? = settings["selectedDisplayId"] { DisplaySelection(setting: s) } else { .primary }
+        }
+        set { settings["selectedDisplayId"] = .string(newValue.setting) }
     }
 }

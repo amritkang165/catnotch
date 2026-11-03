@@ -74,7 +74,7 @@ final class NotchPanel {
     }
 
     private var screen: NSScreen? {
-        NSScreen.screens.first { ($0.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber)?.uint32Value == displayID }
+        NSScreen.screens.first { $0.displayID == displayID }
     }
 
     /// Sizes the closed Notch from the hardware notch (or the default) and pins the panel to the display.
@@ -106,4 +106,8 @@ final class NotchPanel {
             update()
         }
     }
+}
+
+extension NSScreen {
+    var displayID: UInt32? { (deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber)?.uint32Value }
 }

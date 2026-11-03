@@ -124,3 +124,27 @@ private struct Folders {
     store.update { $0.shelf = ["/x"] }
     #expect(calls == 0)
 }
+
+@Test func displaySelectionDefaultsToPrimaryAndIsKeptAcrossLaunches() throws {
+    let folders = try Folders(oldContents: nil)
+    let store = folders.launch()
+    #expect(store.data.displaySelection == .primary)
+
+    for choice in [DisplaySelection.all, .chosen(42), .primary] {
+        store.update { $0.displaySelection = choice }
+        #expect(folders.launch().data.displaySelection == choice)
+    }
+}
+
+@Test func displaySelectionChangeReachesObservers() throws {
+    let store = try Folders(oldContents: nil).launch()
+    var seen: [DisplaySelection] = []
+    _ = store.observe { seen.append($0.displaySelection) }
+    store.update { $0.displaySelection = .all }
+    #expect(seen == [.all])
+}
+
+@Test func importedDisplaySettingIsRead() throws {
+    let folders = try Folders(oldContents: #"{ "settings": { "selectedDisplayId": "all" } }"#)
+    #expect(folders.launch().data.displaySelection == .all)
+}
