@@ -20,6 +20,8 @@
 		B00000000000000000000023 /* ForegroundState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000023 /* ForegroundState.swift */; };
 		B00000000000000000000024 /* DisplaySelectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000024 /* DisplaySelectionTests.swift */; };
 		B00000000000000000000025 /* NotchSizeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000025 /* NotchSizeTests.swift */; };
+		B00000000000000000000031 /* CatNotchStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000031 /* CatNotchStore.swift */; };
+		B00000000000000000000032 /* CatNotchStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000032 /* CatNotchStoreTests.swift */; };
 		B00000000000000000000026 /* ForegroundStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000026 /* ForegroundStateTests.swift */; };
 		B00000000000000000000027 /* NotchController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000027 /* NotchController.swift */; };
 /* End PBXBuildFile section */
@@ -56,6 +58,8 @@
 		A00000000000000000000023 /* ForegroundState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForegroundState.swift; sourceTree = "<group>"; };
 		A00000000000000000000024 /* DisplaySelectionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplaySelectionTests.swift; sourceTree = "<group>"; };
 		A00000000000000000000025 /* NotchSizeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchSizeTests.swift; sourceTree = "<group>"; };
+		A00000000000000000000031 /* CatNotchStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatNotchStore.swift; sourceTree = "<group>"; };
+		A00000000000000000000032 /* CatNotchStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatNotchStoreTests.swift; sourceTree = "<group>"; };
 		A00000000000000000000026 /* ForegroundStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForegroundStateTests.swift; sourceTree = "<group>"; };
 		A00000000000000000000027 /* NotchController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -110,6 +114,7 @@
 		F00000000000000000000003 /* CatNotchCore */ = {
 			isa = PBXGroup;
 			children = (
+				A00000000000000000000031 /* CatNotchStore.swift */,
 				A00000000000000000000023 /* ForegroundState.swift */,
 				A00000000000000000000022 /* NotchSize.swift */,
 				A00000000000000000000021 /* DisplaySelection.swift */,
@@ -122,6 +127,7 @@
 		F00000000000000000000004 /* CatNotchCoreTests */ = {
 			isa = PBXGroup;
 			children = (
+				A00000000000000000000032 /* CatNotchStoreTests.swift */,
 				A00000000000000000000026 /* ForegroundStateTests.swift */,
 				A00000000000000000000025 /* NotchSizeTests.swift */,
 				A00000000000000000000024 /* DisplaySelectionTests.swift */,
@@ -239,6 +245,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B00000000000000000000031 /* CatNotchStore.swift in Sources */,
 				B00000000000000000000023 /* ForegroundState.swift in Sources */,
 				B00000000000000000000022 /* NotchSize.swift in Sources */,
 				B00000000000000000000021 /* DisplaySelection.swift in Sources */,
@@ -251,6 +258,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B00000000000000000000032 /* CatNotchStoreTests.swift in Sources */,
 				B00000000000000000000026 /* ForegroundStateTests.swift in Sources */,
 				B00000000000000000000025 /* NotchSizeTests.swift in Sources */,
 				B00000000000000000000024 /* DisplaySelectionTests.swift in Sources */,
