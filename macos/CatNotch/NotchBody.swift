@@ -67,6 +67,79 @@ private struct ClosedClock: View {
     }
 }
 
+/// Focus has its own colour, so it never reads as another meter.
+private let focusColor = Color(red: 52 / 255, green: 211 / 255, blue: 153 / 255)
+
+/// A ring that fills to `fraction`, starting at the top.
+private struct FocusRing: View {
+    let fraction: Double
+    let width: CGFloat
+    var color = Color.white
+
+    var body: some View {
+        ZStack {
+            Circle().stroke(.white.opacity(0.18), lineWidth: width)
+            Circle().trim(from: 0, to: fraction)
+                .stroke(color, style: StrokeStyle(lineWidth: width, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+        }
+        .animation(.linear(duration: 1), value: fraction) // one tick a second, so it glides rather than steps
+    }
+}
+
+/// What the closed Notch says while a session runs: the ring draining and the time left, in the clock's place.
+private struct ClosedFocus: View {
+    var focus: FocusModel
+
+    var body: some View {
+        HStack(spacing: 5) {
+            FocusRing(fraction: 1 - focus.progress, width: 2).frame(width: 11, height: 11)
+            Text(FocusLength.clock(seconds: focus.remaining)).font(.system(size: 10, weight: .semibold).monospacedDigit())
+        }
+        .foregroundStyle(.white.opacity(0.85))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Focus, \(FocusLength.clock(seconds: focus.remaining)) left")
+    }
+}
+
+/// The focus tile on the Focus & tasks view: ring, time, today's tally and the controls.
+private struct FocusTile: View {
+    var focus: FocusModel
+
+    private var time: String {
+        switch focus.phase {
+        case .idle: FocusLength.format(focus.minutes)
+        case .running, .paused: FocusLength.clock(seconds: focus.remaining)
+        case .finished: "Break"
+        }
+    }
+
+    var body: some View {
+        let today = focus.today
+        HStack(spacing: 16) {
+            FocusRing(fraction: focus.phase == .idle ? 1 : focus.progress, width: 6, color: focusColor)
+                .opacity(focus.phase == .idle ? 0.35 : 1)
+                .frame(width: 58, height: 58)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(focus.phase.title.uppercased()).font(.system(size: 10, weight: .semibold)).tracking(0.8).foregroundStyle(.white.opacity(0.55))
+                Text(time).font(.system(size: 26, weight: .semibold).monospacedDigit()).foregroundStyle(focus.phase == .idle ? .white : focusColor)
+                Text(today.sessions == 0 ? "No sessions today" : "Today: \(today.sessions) \(today.sessions == 1 ? "session" : "sessions"), \(Int(today.minutes)) min")
+                    .font(.system(size: 11)).foregroundStyle(.white.opacity(0.55))
+            }
+            VStack(spacing: 6) {
+                Button(action: focus.toggle) {
+                    Text(focus.phase.action).font(.system(size: 12, weight: .semibold)).foregroundStyle(.black)
+                        .frame(width: 64).padding(.vertical, 6).background(Capsule().fill(.white))
+                }
+                if focus.phase != .idle {
+                    Button("Reset", action: focus.reset).font(.system(size: 11)).foregroundStyle(.white.opacity(0.6))
+                }
+            }
+            .buttonStyle(.plain)
+        }
+    }
+}
+
 /// The circles that move between views. The white highlight slides to the chosen one.
 private struct ViewSwitcher: View {
     @Binding var page: NotchPage
@@ -96,6 +169,7 @@ private struct ViewSwitcher: View {
 
 struct NotchView: View {
     var model: NotchModel
+    var focus: FocusModel
 
     var body: some View {
         let size = model.hover.size(isOpen: model.isOpen)
@@ -109,14 +183,21 @@ struct NotchView: View {
             if model.isOpen {
                 VStack(spacing: 14) {
                     ViewSwitcher(page: Bindable(model).page)
-                    Text(model.page.label).font(.system(size: 15, weight: .semibold))
+                    if model.page == .desk {
+                        FocusTile(focus: focus)
+                    } else {
+                        Text(model.page.label).font(.system(size: 15, weight: .semibold))
+                    }
                 }
                 .foregroundStyle(.white)
                 .padding(.top, closed.height + 10)
                 .transition(.opacity)
             } else {
                 // On a hardware notch the clock sits in the left wing; otherwise it centres in the closed Notch.
-                ClosedClock()
+                Group {
+                    // A running session takes the clock's place; a paused one gives it back.
+                    if focus.phase == .running { ClosedFocus(focus: focus) } else { ClosedClock() }
+                }
                     .frame(width: model.cutout > 0 ? NotchSize.wing : closed.width, height: closed.height)
                     .frame(width: closed.width, alignment: .leading)
                     .transition(.opacity)

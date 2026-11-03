@@ -8,8 +8,8 @@ import CatNotchCore
 final class SettingsWindow {
     private let window: NSWindow
 
-    init(store: CatNotchStore) {
-        window = NSWindow(contentViewController: NSHostingController(rootView: SettingsView(store: store)))
+    init(store: CatNotchStore, focus: FocusModel) {
+        window = NSWindow(contentViewController: NSHostingController(rootView: SettingsView(store: store, focus: focus)))
         window.title = "CatNotch Settings"
         window.styleMask = [.titled, .closable, .miniaturizable]
         window.isReleasedWhenClosed = false // closing hides it; the shortcut shows the same window again
@@ -26,14 +26,16 @@ final class SettingsWindow {
 
 private struct SettingsView: View {
     let store: CatNotchStore
+    let focus: FocusModel
     @State private var selection: DisplaySelection
     @State private var style: NotchStyle
     @State private var flavor: Flavor
     @State private var opensAtLogin = SMAppService.mainApp.status == .enabled
     @State private var screens = NSScreen.screens
 
-    init(store: CatNotchStore) {
+    init(store: CatNotchStore, focus: FocusModel) {
         self.store = store
+        self.focus = focus
         _selection = State(initialValue: store.data.displaySelection)
         _style = State(initialValue: store.data.notchStyle)
         _flavor = State(initialValue: store.data.notchFlavor)
@@ -57,10 +59,24 @@ private struct SettingsView: View {
                 ForEach(Flavor.allCases, id: \.self) { Text($0.label).tag($0) }
             }
             .pickerStyle(.segmented)
+            Section("Focus timer") {
+                Picker("Session length", selection: Binding(get: { focus.minutes }, set: focus.setMinutes)) {
+                    ForEach(FocusLength.options(including: focus.minutes), id: \.self) { Text(FocusLength.format($0)).tag($0) }
+                }
+                LabeledContent(focus.phase.title) {
+                    HStack {
+                        if focus.phase != .idle && focus.phase != .finished {
+                            Text(FocusLength.clock(seconds: focus.remaining)).monospacedDigit()
+                        }
+                        Button(focus.phase.action, action: focus.toggle)
+                        Button("Reset", action: focus.reset).disabled(focus.phase == .idle)
+                    }
+                }
+            }
             Button("Quit CatNotch") { NSApp.terminate(nil) }
         }
         .formStyle(.grouped)
-        .frame(width: 440, height: 300)
+        .frame(width: 440, height: 420)
         // Displays may come and go while the window is open.
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didChangeScreenParametersNotification)) { _ in screens = NSScreen.screens }
         .onReceive(NotificationCenter.default.publisher(for: NSWindow.didBecomeKeyNotification)) { _ in

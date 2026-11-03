@@ -35,7 +35,7 @@ final class NotchPanel {
     private let model = NotchModel(open: openSize)
     private let panel: TopPanel
 
-    init(displayID: UInt32, data: StoreData) {
+    init(displayID: UInt32, data: StoreData, focus: FocusModel) {
         self.displayID = displayID
         panel = TopPanel(contentRect: .zero, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
         panel.level = .statusBar
@@ -47,7 +47,7 @@ final class NotchPanel {
         panel.acceptsMouseMovedEvents = true
         panel.ignoresMouseEvents = true
 
-        let view = TrackedHostingView(rootView: NotchView(model: model))
+        let view = TrackedHostingView(rootView: NotchView(model: model, focus: focus))
         view.onPointer = { [weak self] in self?.update() }
         panel.contentView = view
         apply(data)

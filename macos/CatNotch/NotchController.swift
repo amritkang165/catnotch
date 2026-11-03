@@ -8,11 +8,13 @@ final class NotchController {
     private var selection: DisplaySelection { didSet { sync() } }
 
     private let store: CatNotchStore
+    private let focus: FocusModel
     private var panels: [UInt32: NotchPanel] = [:]
     private var foreground: ForegroundState?
 
-    init(store: CatNotchStore) {
+    init(store: CatNotchStore, focus: FocusModel) {
         self.store = store
+        self.focus = focus
         selection = store.data.displaySelection
         // Settings changes the rule through the store; every Notch follows live. Lives as long as the app.
         _ = store.observe { [weak self] data in MainActor.assumeIsolated { // other settings share the store: only a real change re-syncs
@@ -59,7 +61,7 @@ final class NotchController {
             panels[id] = nil
         }
         for id in targets {
-            if let panel = panels[id] { panel.reposition() } else { panels[id] = NotchPanel(displayID: id, data: store.data) }
+            if let panel = panels[id] { panel.reposition() } else { panels[id] = NotchPanel(displayID: id, data: store.data, focus: focus) }
         }
         applyForeground()
     }
