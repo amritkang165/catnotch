@@ -2,19 +2,20 @@ import AppKit
 import SwiftUI
 import CatNotchCore
 
-// Prototype constants. Hardware notch sizing comes in a later issue.
-private let hover = NotchHover(closed: CGSize(width: 200, height: 32), open: CGSize(width: 520, height: 200))
+// Prototype constant: the open size. Real content sizes come with the features.
+private let openSize = CGSize(width: 520, height: 200)
 
 @Observable
 final class NotchModel {
     var isOpen = false
+    var hover = NotchHover(closed: NotchSize.fallback, open: openSize)
 }
 
 private struct NotchView: View {
     var model: NotchModel
 
     var body: some View {
-        let size = hover.size(isOpen: model.isOpen)
+        let size = model.hover.size(isOpen: model.isOpen)
         UnevenRoundedRectangle(bottomLeadingRadius: 18, bottomTrailingRadius: 18)
             .fill(.black)
             .frame(width: size.width, height: size.height)
@@ -46,14 +47,16 @@ private final class TopPanel: NSPanel {
     override func constrainFrameRect(_ frameRect: NSRect, to screen: NSScreen?) -> NSRect { frameRect }
 }
 
-/// One transparent panel at the top centre. It ignores the mouse (clicks fall through) except while open.
-/// Pointer input is event driven only: monitors and a tracking area, no timer.
+/// One transparent panel at the top centre of one display. It ignores the mouse (clicks fall through) except while open.
+/// Pointer input is event driven: NotchController owns the monitors and calls `update()`; the tracking area does too.
 @MainActor
 final class NotchPanel {
+    let displayID: UInt32
     private let model = NotchModel()
     private let panel: TopPanel
 
-    init() {
+    init(displayID: UInt32) {
+        self.displayID = displayID
         panel = TopPanel(contentRect: .zero, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
         panel.level = .statusBar
         panel.isOpaque = false
@@ -67,27 +70,40 @@ final class NotchPanel {
         let view = TrackedHostingView(rootView: NotchView(model: model))
         view.onPointer = { [weak self] in self?.update() }
         panel.contentView = view
-
-        // Monitors live as long as the app (prototype). Global sees moves over other apps (panel is ignoring), local sees moves over us (panel is taking events).
-        NSEvent.addGlobalMonitorForEvents(matching: .mouseMoved) { [weak self] _ in MainActor.assumeIsolated { self?.update() } }
-        NSEvent.addLocalMonitorForEvents(matching: .mouseMoved) { [weak self] event in MainActor.assumeIsolated { self?.update() }; return event }
-
-        NotificationCenter.default.addObserver(forName: NSApplication.didChangeScreenParametersNotification, object: nil, queue: .main) { [weak self] _ in MainActor.assumeIsolated { self?.reposition() } }
         reposition()
-        panel.orderFrontRegardless()
     }
 
-    private var screenFrame: CGRect { (NSScreen.screens.first ?? NSScreen.main)?.frame ?? .zero }
+    private var screen: NSScreen? {
+        NSScreen.screens.first { ($0.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber)?.uint32Value == displayID }
+    }
 
-    private func reposition() {
-        panel.setFrame(hover.panelFrame(in: screenFrame), display: true)
+    /// Sizes the closed Notch from the hardware notch (or the default) and pins the panel to the display.
+    func reposition() {
+        guard let screen else { return }
+        model.hover.closed = NotchSize.closed(
+            screenWidth: screen.frame.width, safeTop: screen.safeAreaInsets.top,
+            leftWidth: screen.auxiliaryTopLeftArea?.width, rightWidth: screen.auxiliaryTopRightArea?.width)
+        panel.setFrame(model.hover.panelFrame(in: screen.frame), display: true)
         update()
     }
 
-    private func update() {
-        let open = hover.isOpen(cursor: NSEvent.mouseLocation, in: screenFrame, wasOpen: model.isOpen)
+    func update() {
+        guard let screen else { return }
+        let open = model.hover.isOpen(cursor: NSEvent.mouseLocation, in: screen.frame, wasOpen: model.isOpen)
         guard open != model.isOpen else { return }
         model.isOpen = open
         panel.ignoresMouseEvents = !open
+    }
+
+    /// Hidden over a fullscreen app. Shown again it starts closed.
+    func setHidden(_ hidden: Bool) {
+        if hidden {
+            panel.orderOut(nil)
+        } else if !panel.isVisible {
+            model.isOpen = false
+            panel.ignoresMouseEvents = true
+            panel.orderFrontRegardless()
+            update()
+        }
     }
 }

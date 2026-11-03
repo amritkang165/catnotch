@@ -4,7 +4,7 @@ import AppKit
 @main
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    private var notch: NotchPanel?
+    private var notch: NotchController?
 
     static func main() {
         let app = NSApplication.shared
@@ -14,6 +14,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        notch = NotchPanel()
+        notch = NotchController()
     }
 }
