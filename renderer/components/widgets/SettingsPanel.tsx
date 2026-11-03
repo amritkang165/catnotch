@@ -278,11 +278,10 @@ interface SettingsPanelProps {
 }
 
 /** The updater's state, as main/updater.ts reports it. */
-type UpdateState = {
-  status: 'dev' | 'idle' | 'checking' | 'none' | 'error' | 'available'
-  version: string
-  next?: string
-}
+type UpdateState =
+  | { status: 'dev' | 'idle' | 'checking' | 'none' | 'error'; version: string }
+  | { status: 'available' | 'installing' | 'failed'; version: string; next: string }
+  | { status: 'downloading'; version: string; next: string; percent: number }
 
 /** Version, update status, and the one thing to do about it. */
 /** Claude Code's permission and question popups: a switch that adds our hooks to Claude's settings.json, after showing exactly what it adds. */
@@ -388,22 +387,27 @@ const UpdateRow: React.FC = () => {
     checking: 'Checking for updates…',
     none: 'Up to date',
     error: "Couldn't check for updates",
-    available: `Version ${update.next} is out. Run: brew upgrade --cask desknotch`,
+    available: update.status === 'available' ? `Version ${update.next} is out` : undefined,
+    downloading: update.status === 'downloading' ? `Downloading ${update.next}… ${update.percent}%` : undefined,
+    installing: 'Installing, CatNotch will restart…',
+    failed: "Couldn't update. If CatNotch is running from a disk image, move it to Applications.",
   }[update.status]
   const busy = update.status === 'checking' || update.status === 'dev'
+  const installable = update.status === 'available' || update.status === 'failed'
+  const working = update.status === 'downloading' || update.status === 'installing'
   return (
     <Row title={`Version ${update.version}`} detail={detail}>
-      {update.status !== 'available' && (
+      {!working && (
         <button
           type="button"
           disabled={busy}
           onClick={(event) => {
             halt(event)
-            void window.bridge?.invoke('update:check')
+            void window.bridge?.invoke(installable ? 'update:install' : 'update:check')
           }}
           className="h-[24px] shrink-0 rounded-full bg-white/[0.08] px-3 text-[11px] font-medium text-white/75 transition-colors hover:bg-white/[0.14] hover:text-white disabled:opacity-35"
         >
-          Check for updates
+          {update.status === 'failed' ? 'Retry' : update.status === 'available' ? `Update to ${update.next}` : 'Check for updates'}
         </button>
       )}
     </Row>
