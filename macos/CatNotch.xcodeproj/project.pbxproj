@@ -12,6 +12,9 @@
 		B00000000000000000000003 /* CatNotchCoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000003 /* CatNotchCoreTests.swift */; };
 		B00000000000000000000004 /* libCatNotchCore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A00000000000000000000005 /* libCatNotchCore.a */; };
 		B00000000000000000000005 /* libCatNotchCore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A00000000000000000000005 /* libCatNotchCore.a */; };
+		B00000000000000000000006 /* NotchPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000007 /* NotchPanel.swift */; };
+		B00000000000000000000007 /* NotchHover.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000008 /* NotchHover.swift */; };
+		B00000000000000000000008 /* NotchHoverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000009 /* NotchHoverTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -38,6 +41,9 @@
 		A00000000000000000000004 /* CatNotch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CatNotch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A00000000000000000000005 /* libCatNotchCore.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libCatNotchCore.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		A00000000000000000000006 /* CatNotchCoreTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CatNotchCoreTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		A00000000000000000000007 /* NotchPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchPanel.swift; sourceTree = "<group>"; };
+		A00000000000000000000008 /* NotchHover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchHover.swift; sourceTree = "<group>"; };
+		A00000000000000000000009 /* NotchHoverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchHoverTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -81,6 +87,7 @@
 			isa = PBXGroup;
 			children = (
 				A00000000000000000000001 /* AppDelegate.swift */,
+				A00000000000000000000007 /* NotchPanel.swift */,
 			);
 			path = CatNotch;
 			sourceTree = "<group>";
@@ -89,6 +96,7 @@
 			isa = PBXGroup;
 			children = (
 				A00000000000000000000002 /* CatNotchCore.swift */,
+				A00000000000000000000008 /* NotchHover.swift */,
 			);
 			path = CatNotchCore;
 			sourceTree = "<group>";
@@ -97,6 +105,7 @@
 			isa = PBXGroup;
 			children = (
 				A00000000000000000000003 /* CatNotchCoreTests.swift */,
+				A00000000000000000000009 /* NotchHoverTests.swift */,
 			);
 			path = CatNotchCoreTests;
 			sourceTree = "<group>";
@@ -200,6 +209,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B00000000000000000000001 /* AppDelegate.swift in Sources */,
+				B00000000000000000000006 /* NotchPanel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -208,6 +218,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B00000000000000000000002 /* CatNotchCore.swift in Sources */,
+				B00000000000000000000007 /* NotchHover.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -216,6 +227,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B00000000000000000000003 /* CatNotchCoreTests.swift in Sources */,
+				B00000000000000000000008 /* NotchHoverTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
