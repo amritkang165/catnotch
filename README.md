@@ -91,7 +91,7 @@ Do not click **Move to Bin**. Click **Done**, then fix it either way:
 
 You only need to do this once per downloaded version.
 
-Update by downloading the new DMG. CatNotch never installs updates by itself on macOS; Settings tells you when a newer version is out.
+Settings tells you when a newer version is out. Press Update there and CatNotch downloads it, replaces itself and restarts. Nothing updates until you press it.
 
 **Permissions**, each asked only when its feature needs it:
 - **Location**: to show the Wi-Fi network name. Say no and you get a plain "Wi-Fi" moment.
