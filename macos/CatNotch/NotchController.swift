@@ -7,14 +7,18 @@ import CatNotchCore
 final class NotchController {
     private var selection: DisplaySelection { didSet { sync() } }
 
+    private let store: CatNotchStore
     private var panels: [UInt32: NotchPanel] = [:]
     private var foreground: ForegroundState?
 
     init(store: CatNotchStore) {
+        self.store = store
         selection = store.data.displaySelection
         // Settings changes the rule through the store; every Notch follows live. Lives as long as the app.
         _ = store.observe { [weak self] data in MainActor.assumeIsolated { // other settings share the store: only a real change re-syncs
-            if let self, data.displaySelection != self.selection { self.selection = data.displaySelection }
+            guard let self else { return }
+            if data.displaySelection != self.selection { self.selection = data.displaySelection }
+            self.panels.values.forEach { $0.apply(data) } // the look changed in Settings
         } }
         // Monitors live as long as the app. Global sees moves over other apps (panels ignore the mouse), local over ours.
         NSEvent.addGlobalMonitorForEvents(matching: .mouseMoved) { [weak self] _ in MainActor.assumeIsolated { self?.pointerMoved() } }
@@ -55,7 +59,7 @@ final class NotchController {
             panels[id] = nil
         }
         for id in targets {
-            if let panel = panels[id] { panel.reposition() } else { panels[id] = NotchPanel(displayID: id) }
+            if let panel = panels[id] { panel.reposition() } else { panels[id] = NotchPanel(displayID: id, data: store.data) }
         }
         applyForeground()
     }

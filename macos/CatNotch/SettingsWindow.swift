@@ -27,12 +27,16 @@ final class SettingsWindow {
 private struct SettingsView: View {
     let store: CatNotchStore
     @State private var selection: DisplaySelection
+    @State private var style: NotchStyle
+    @State private var flavor: Flavor
     @State private var opensAtLogin = SMAppService.mainApp.status == .enabled
     @State private var screens = NSScreen.screens
 
     init(store: CatNotchStore) {
         self.store = store
         _selection = State(initialValue: store.data.displaySelection)
+        _style = State(initialValue: store.data.notchStyle)
+        _flavor = State(initialValue: store.data.notchFlavor)
     }
 
     var body: some View {
@@ -45,10 +49,18 @@ private struct SettingsView: View {
                     if let id = screen.displayID { Text(screen.localizedName).tag(DisplaySelection.chosen(id)) }
                 }
             }
+            Picker("Style", selection: Binding(get: { style }, set: { choice in style = choice; store.update { $0.notchStyle = choice } })) {
+                ForEach(NotchStyle.allCases, id: \.self) { Text($0.label).tag($0) }
+            }
+            .pickerStyle(.segmented)
+            Picker("Flavour", selection: Binding(get: { flavor }, set: { choice in flavor = choice; store.update { $0.notchFlavor = choice } })) {
+                ForEach(Flavor.allCases, id: \.self) { Text($0.label).tag($0) }
+            }
+            .pickerStyle(.segmented)
             Button("Quit CatNotch") { NSApp.terminate(nil) }
         }
         .formStyle(.grouped)
-        .frame(width: 440, height: 220)
+        .frame(width: 440, height: 300)
         // Displays may come and go while the window is open.
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didChangeScreenParametersNotification)) { _ in screens = NSScreen.screens }
         .onReceive(NotificationCenter.default.publisher(for: NSWindow.didBecomeKeyNotification)) { _ in

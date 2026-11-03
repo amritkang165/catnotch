@@ -5,26 +5,6 @@ import CatNotchCore
 // Prototype constant: the open size. Real content sizes come with the features.
 private let openSize = CGSize(width: 520, height: 200)
 
-@Observable
-final class NotchModel {
-    var isOpen = false
-    var hover = NotchHover(closed: NotchSize.fallback, open: openSize)
-}
-
-private struct NotchView: View {
-    var model: NotchModel
-
-    var body: some View {
-        let size = model.hover.size(isOpen: model.isOpen)
-        UnevenRoundedRectangle(bottomLeadingRadius: 18, bottomTrailingRadius: 18)
-            .fill(.black)
-            .frame(width: size.width, height: size.height)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-            .animation(.spring(duration: 0.3), value: model.isOpen)
-            .ignoresSafeArea() // a hardware notch would otherwise push the drawing below the hit rect
-    }
-}
-
 /// Hosting view with a tracking area, so the pointer leaving the panel is seen while it takes mouse events.
 private final class TrackedHostingView<Content: View>: NSHostingView<Content> {
     var onPointer: () -> Void = {}
@@ -52,10 +32,10 @@ private final class TopPanel: NSPanel {
 @MainActor
 final class NotchPanel {
     let displayID: UInt32
-    private let model = NotchModel()
+    private let model = NotchModel(open: openSize)
     private let panel: TopPanel
 
-    init(displayID: UInt32) {
+    init(displayID: UInt32, data: StoreData) {
         self.displayID = displayID
         panel = TopPanel(contentRect: .zero, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
         panel.level = .statusBar
@@ -70,6 +50,7 @@ final class NotchPanel {
         let view = TrackedHostingView(rootView: NotchView(model: model))
         view.onPointer = { [weak self] in self?.update() }
         panel.contentView = view
+        apply(data)
         reposition()
     }
 
@@ -80,11 +61,19 @@ final class NotchPanel {
     /// Sizes the closed Notch from the hardware notch (or the default) and pins the panel to the display.
     func reposition() {
         guard let screen else { return }
-        model.hover.closed = NotchSize.closed(
+        let bar = NotchSize.closedWithWings(
             screenWidth: screen.frame.width, safeTop: screen.safeAreaInsets.top,
             leftWidth: screen.auxiliaryTopLeftArea?.width, rightWidth: screen.auxiliaryTopRightArea?.width)
+        model.hover.closed = bar.size
+        model.cutout = bar.cutout
         panel.setFrame(model.hover.panelFrame(in: screen.frame), display: true)
         update()
+    }
+
+    /// Takes the saved look.
+    func apply(_ data: StoreData) {
+        model.style = data.notchStyle
+        model.flavor = data.notchFlavor
     }
 
     func update() {
