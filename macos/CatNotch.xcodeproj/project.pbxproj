@@ -18,11 +18,13 @@
 		B00000000000000000000021 /* DisplaySelection.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000021 /* DisplaySelection.swift */; };
 		B00000000000000000000050 /* NotchLook.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000050 /* NotchLook.swift */; };
 		B00000000000000000000053 /* FocusTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000053 /* FocusTimer.swift */; };
+		B00000000000000000000056 /* Tasks.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000056 /* Tasks.swift */; };
 		B00000000000000000000022 /* NotchSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000022 /* NotchSize.swift */; };
 		B00000000000000000000023 /* ForegroundState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000023 /* ForegroundState.swift */; };
 		B00000000000000000000024 /* DisplaySelectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000024 /* DisplaySelectionTests.swift */; };
 		B00000000000000000000051 /* NotchLookTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000051 /* NotchLookTests.swift */; };
 		B00000000000000000000054 /* FocusTimerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000054 /* FocusTimerTests.swift */; };
+		B00000000000000000000057 /* TasksTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000057 /* TasksTests.swift */; };
 		B00000000000000000000025 /* NotchSizeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000025 /* NotchSizeTests.swift */; };
 		B00000000000000000000031 /* CatNotchStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000031 /* CatNotchStore.swift */; };
 		B00000000000000000000032 /* CatNotchStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000032 /* CatNotchStoreTests.swift */; };
@@ -31,6 +33,7 @@
 		B00000000000000000000041 /* GlobalShortcut.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000041 /* GlobalShortcut.swift */; };
 		B00000000000000000000052 /* NotchBody.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000052 /* NotchBody.swift */; };
 		B00000000000000000000055 /* FocusModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000055 /* FocusModel.swift */; };
+		B00000000000000000000058 /* TaskModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000058 /* TaskModel.swift */; };
 		B00000000000000000000042 /* SettingsWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000042 /* SettingsWindow.swift */; };
 /* End PBXBuildFile section */
 
@@ -64,11 +67,13 @@
 		A00000000000000000000021 /* DisplaySelection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplaySelection.swift; sourceTree = "<group>"; };
 		A00000000000000000000050 /* NotchLook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchLook.swift; sourceTree = "<group>"; };
 		A00000000000000000000053 /* FocusTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimer.swift; sourceTree = "<group>"; };
+		A00000000000000000000056 /* Tasks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tasks.swift; sourceTree = "<group>"; };
 		A00000000000000000000022 /* NotchSize.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchSize.swift; sourceTree = "<group>"; };
 		A00000000000000000000023 /* ForegroundState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForegroundState.swift; sourceTree = "<group>"; };
 		A00000000000000000000024 /* DisplaySelectionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplaySelectionTests.swift; sourceTree = "<group>"; };
 		A00000000000000000000051 /* NotchLookTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchLookTests.swift; sourceTree = "<group>"; };
 		A00000000000000000000054 /* FocusTimerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimerTests.swift; sourceTree = "<group>"; };
+		A00000000000000000000057 /* TasksTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TasksTests.swift; sourceTree = "<group>"; };
 		A00000000000000000000025 /* NotchSizeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchSizeTests.swift; sourceTree = "<group>"; };
 		A00000000000000000000031 /* CatNotchStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatNotchStore.swift; sourceTree = "<group>"; };
 		A00000000000000000000032 /* CatNotchStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatNotchStoreTests.swift; sourceTree = "<group>"; };
@@ -77,6 +82,7 @@
 		A00000000000000000000041 /* GlobalShortcut.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalShortcut.swift; sourceTree = "<group>"; };
 		A00000000000000000000052 /* NotchBody.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchBody.swift; sourceTree = "<group>"; };
 		A00000000000000000000055 /* FocusModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusModel.swift; sourceTree = "<group>"; };
+		A00000000000000000000058 /* TaskModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskModel.swift; sourceTree = "<group>"; };
 		A00000000000000000000042 /* SettingsWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindow.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -125,6 +131,7 @@
 				A00000000000000000000007 /* NotchPanel.swift */,
 				A00000000000000000000052 /* NotchBody.swift */,
 				A00000000000000000000055 /* FocusModel.swift */,
+				A00000000000000000000058 /* TaskModel.swift */,
 				A00000000000000000000042 /* SettingsWindow.swift */,
 				A00000000000000000000041 /* GlobalShortcut.swift */,
 			);
@@ -138,6 +145,7 @@
 				A00000000000000000000023 /* ForegroundState.swift */,
 				A00000000000000000000050 /* NotchLook.swift */,
 				A00000000000000000000053 /* FocusTimer.swift */,
+				A00000000000000000000056 /* Tasks.swift */,
 				A00000000000000000000022 /* NotchSize.swift */,
 				A00000000000000000000021 /* DisplaySelection.swift */,
 				A00000000000000000000002 /* CatNotchCore.swift */,
@@ -153,6 +161,7 @@
 				A00000000000000000000026 /* ForegroundStateTests.swift */,
 				A00000000000000000000051 /* NotchLookTests.swift */,
 				A00000000000000000000054 /* FocusTimerTests.swift */,
+				A00000000000000000000057 /* TasksTests.swift */,
 				A00000000000000000000025 /* NotchSizeTests.swift */,
 				A00000000000000000000024 /* DisplaySelectionTests.swift */,
 				A00000000000000000000003 /* CatNotchCoreTests.swift */,
@@ -264,6 +273,7 @@
 				B00000000000000000000006 /* NotchPanel.swift in Sources */,
 				B00000000000000000000052 /* NotchBody.swift in Sources */,
 				B00000000000000000000055 /* FocusModel.swift in Sources */,
+				B00000000000000000000058 /* TaskModel.swift in Sources */,
 				B00000000000000000000042 /* SettingsWindow.swift in Sources */,
 				B00000000000000000000041 /* GlobalShortcut.swift in Sources */,
 			);
@@ -277,6 +287,7 @@
 				B00000000000000000000023 /* ForegroundState.swift in Sources */,
 				B00000000000000000000050 /* NotchLook.swift in Sources */,
 				B00000000000000000000053 /* FocusTimer.swift in Sources */,
+				B00000000000000000000056 /* Tasks.swift in Sources */,
 				B00000000000000000000022 /* NotchSize.swift in Sources */,
 				B00000000000000000000021 /* DisplaySelection.swift in Sources */,
 				B00000000000000000000002 /* CatNotchCore.swift in Sources */,
@@ -292,6 +303,7 @@
 				B00000000000000000000026 /* ForegroundStateTests.swift in Sources */,
 				B00000000000000000000051 /* NotchLookTests.swift in Sources */,
 				B00000000000000000000054 /* FocusTimerTests.swift in Sources */,
+				B00000000000000000000057 /* TasksTests.swift in Sources */,
 				B00000000000000000000025 /* NotchSizeTests.swift in Sources */,
 				B00000000000000000000024 /* DisplaySelectionTests.swift in Sources */,
 				B00000000000000000000003 /* CatNotchCoreTests.swift in Sources */,

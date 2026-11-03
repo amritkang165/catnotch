@@ -2,8 +2,8 @@ import AppKit
 import SwiftUI
 import CatNotchCore
 
-// Prototype constant: the open size. Real content sizes come with the features.
-private let openSize = CGSize(width: 520, height: 200)
+// The open size: the focus tile and the task list side by side (see NotchView). Grows as features fill the pages.
+private let openSize = CGSize(width: 700, height: 260)
 
 /// Hosting view with a tracking area, so the pointer leaving the panel is seen while it takes mouse events.
 private final class TrackedHostingView<Content: View>: NSHostingView<Content> {
@@ -17,6 +17,7 @@ private final class TrackedHostingView<Content: View>: NSHostingView<Content> {
         addTrackingArea(new)
         area = new
     }
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true } // the panel can be key now; a first click must still land
     override func mouseMoved(with event: NSEvent) { onPointer() }
     override func mouseEntered(with event: NSEvent) { onPointer() }
     override func mouseExited(with event: NSEvent) { onPointer() }
@@ -24,6 +25,7 @@ private final class TrackedHostingView<Content: View>: NSHostingView<Content> {
 
 /// A panel AppKit may not nudge below the menu bar: the drawn Notch must sit where the hit rect says.
 private final class TopPanel: NSPanel {
+    override var canBecomeKey: Bool { true } // the quick-add field needs the keyboard; a nonactivating panel takes it without activating the app
     override func constrainFrameRect(_ frameRect: NSRect, to screen: NSScreen?) -> NSRect { frameRect }
 }
 
@@ -35,7 +37,7 @@ final class NotchPanel {
     private let model = NotchModel(open: openSize)
     private let panel: TopPanel
 
-    init(displayID: UInt32, data: StoreData, focus: FocusModel) {
+    init(displayID: UInt32, data: StoreData, focus: FocusModel, tasks: TaskModel) {
         self.displayID = displayID
         panel = TopPanel(contentRect: .zero, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
         panel.level = .statusBar
@@ -47,7 +49,7 @@ final class NotchPanel {
         panel.acceptsMouseMovedEvents = true
         panel.ignoresMouseEvents = true
 
-        let view = TrackedHostingView(rootView: NotchView(model: model, focus: focus))
+        let view = TrackedHostingView(rootView: NotchView(model: model, focus: focus, tasks: tasks))
         view.onPointer = { [weak self] in self?.update() }
         panel.contentView = view
         apply(data)

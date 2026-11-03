@@ -9,6 +9,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// Creating it imports the old DeskNotch store on first launch.
     private let store = CatNotchStore.standard()
     private lazy var focus = FocusModel(store: store)
+    private lazy var tasks = TaskModel(store: store)
     private var settings: SettingsWindow?
     private var shortcut: GlobalShortcut?
 
@@ -20,7 +21,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        notch = NotchController(store: store, focus: focus)
+        notch = NotchController(store: store, focus: focus, tasks: tasks)
         let settings = SettingsWindow(store: store, focus: focus)
         self.settings = settings
         shortcut = GlobalShortcut { settings.show() }

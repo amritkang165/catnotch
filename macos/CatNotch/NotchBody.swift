@@ -140,6 +140,77 @@ private struct FocusTile: View {
     }
 }
 
+/// One task: the whole row ticks it, the cross (on hover) removes it.
+private struct TaskRow: View {
+    let task: StoreTask
+    var tasks: TaskModel
+    @State private var hovering = false
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: task.done ? "checkmark.circle.fill" : "circle")
+                .font(.system(size: 14))
+                .foregroundStyle(task.done ? .white.opacity(0.6) : focusColor.opacity(hovering ? 1 : 0.5))
+            Text(task.label)
+                .font(.system(size: 13)).lineLimit(2).frame(maxWidth: .infinity, alignment: .leading)
+                .foregroundStyle(.white.opacity(task.done ? 0.3 : 0.9)).strikethrough(task.done)
+            Button { tasks.remove(task.id) } label: { Image(systemName: "xmark").font(.system(size: 10, weight: .semibold)) }
+                .buttonStyle(.plain).foregroundStyle(.white.opacity(0.5))
+                .opacity(hovering ? 1 : 0).accessibilityLabel("Delete task")
+        }
+        .padding(.vertical, 5)
+        .contentShape(Rectangle())
+        .onTapGesture { tasks.toggle(task.id) }
+        .onHover { hovering = $0 }
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityLabel("\(task.label), \(task.done ? "done" : "not done")")
+    }
+}
+
+/// The task list: a line to type on, the open tasks, and the done ones folded below.
+private struct TasksList: View {
+    var tasks: TaskModel
+    @State private var draft = ""
+    @State private var showDone = false
+
+    var body: some View {
+        let open = tasks.open, done = tasks.done
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 8) {
+                Image(systemName: "plus").font(.system(size: 11, weight: .semibold)).foregroundStyle(.white.opacity(0.4))
+                TextField("What needs doing", text: $draft)
+                    .textFieldStyle(.plain).font(.system(size: 13))
+                    .onChange(of: draft) { if draft.count > StoreData.taskMaxLength { draft = String(draft.prefix(StoreData.taskMaxLength)) } }
+                    .onSubmit { tasks.add(draft); draft = "" }
+                if !open.isEmpty { Text("\(open.count)").font(.system(size: 11).monospacedDigit()).foregroundStyle(.white.opacity(0.35)) }
+            }
+            .padding(.vertical, 6)
+            .overlay(alignment: .bottom) { Rectangle().fill(.white.opacity(0.12)).frame(height: 1) }
+
+            ScrollView {
+                LazyVStack(spacing: 0) {
+                    ForEach(showDone ? open + done : open, id: \.id) { TaskRow(task: $0, tasks: tasks) }
+                    if open.isEmpty && !showDone {
+                        Text("Nothing left. Type the next thing above.")
+                            .font(.system(size: 12)).foregroundStyle(.white.opacity(0.35))
+                            .frame(maxWidth: .infinity, alignment: .leading).padding(.top, 6)
+                    }
+                }
+            }
+            .scrollIndicators(.never)
+
+            if !done.isEmpty {
+                HStack(spacing: 12) {
+                    Button("\(done.count) done\(showDone ? " · hide" : "")") { showDone.toggle() }
+                    Button("Clear", action: tasks.clearDone)
+                }
+                .buttonStyle(.plain).font(.system(size: 11)).foregroundStyle(.white.opacity(0.45))
+            }
+        }
+    }
+}
+
 /// The circles that move between views. The white highlight slides to the chosen one.
 private struct ViewSwitcher: View {
     @Binding var page: NotchPage
@@ -170,6 +241,7 @@ private struct ViewSwitcher: View {
 struct NotchView: View {
     var model: NotchModel
     var focus: FocusModel
+    var tasks: TaskModel
 
     var body: some View {
         let size = model.hover.size(isOpen: model.isOpen)
@@ -184,7 +256,11 @@ struct NotchView: View {
                 VStack(spacing: 14) {
                     ViewSwitcher(page: Bindable(model).page)
                     if model.page == .desk {
-                        FocusTile(focus: focus)
+                        HStack(alignment: .top, spacing: 28) {
+                            FocusTile(focus: focus)
+                            TasksList(tasks: tasks)
+                        }
+                        .padding(.horizontal, 28).padding(.bottom, 14)
                     } else {
                         Text(model.page.label).font(.system(size: 15, weight: .semibold))
                     }
