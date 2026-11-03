@@ -37,7 +37,8 @@ describe('verifySha512', () => {
   })
 })
 
-describe('swapApp', () => {
+// The swap runs macOS's xattr, which CI's Linux runner does not have.
+describe.skipIf(process.platform !== 'darwin')('swapApp', () => {
   const app = (dir: string, name: string, marker: string) => {
     const path = join(dir, name)
     mkdirSync(join(path, 'Contents'), { recursive: true })
