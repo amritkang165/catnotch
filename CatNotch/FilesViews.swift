@@ -20,7 +20,10 @@ private struct FileThumb: View {
         .task(id: url) {
             guard let url else { image = nil; return }
             let request = QLThumbnailGenerator.Request(fileAt: url, size: CGSize(width: side, height: side), scale: 2, representationTypes: .thumbnail)
-            image = (try? await QLThumbnailGenerator.shared.generateBestRepresentation(for: request))?.nsImage
+            // The completion form: the async one returns a non-Sendable QLThumbnailRepresentation, which Xcode 16.4 rejects.
+            image = await withCheckedContinuation { (done: CheckedContinuation<NSImage?, Never>) in
+                QLThumbnailGenerator.shared.generateBestRepresentation(for: request) { rep, _ in done.resume(returning: rep?.nsImage) }
+            }
         }
     }
 }
