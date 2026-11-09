@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   test:
-    runs-on: macos-15 # arm64; Xcode 16 for Swift Testing
+    runs-on: macos-26 # arm64, default Xcode 26.6
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
