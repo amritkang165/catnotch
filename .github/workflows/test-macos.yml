@@ -19,4 +19,5 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: scripts/release-native.check.sh
+      - run: scripts/build-adapter.sh # so a cmake break shows here, not on the release tag
       - run: xcodebuild test -project CatNotch.xcodeproj -scheme CatNotch -destination 'platform=macOS,arch=arm64'

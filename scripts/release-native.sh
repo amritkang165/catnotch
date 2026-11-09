@@ -25,6 +25,8 @@ if [ -z "${APP:-}" ]; then
   xcodebuild build -project "$PROJECT" -scheme CatNotch -configuration Release \
     -destination 'platform=macOS,arch=arm64' -derivedDataPath build/native
   APP=build/native/Build/Products/Release/CatNotch.app
+  # The Xcode phase only warns when the adapter is missing; a Release must not ship with now playing off.
+  [ -d "$APP/Contents/Resources/mediaremote" ] || { echo "$APP has no mediaremote adapter" >&2; exit 1; }
 fi
 
 ZIP="CatNotch-$VERSION-universal-mac.zip"

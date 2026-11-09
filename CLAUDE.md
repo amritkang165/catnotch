@@ -48,7 +48,7 @@ Needs full Xcode. If `xcodebuild` complains about Command Line Tools, set `DEVEL
 
 ## Testing rules
 
-- Framework is Swift Testing. Tests sit in `CatNotchCoreTests/`, one `<Feature>Tests.swift` per `CatNotchCore/<Feature>.swift`.
+- Framework is Swift Testing. Tests sit in `CatNotchCoreTests/`, one test file per feature (named after the feature, not always after the Core file).
 - Test the logic in `CatNotchCore`; keep views and AppKit glue thin.
 
 ## Specs
