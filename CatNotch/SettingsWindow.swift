@@ -183,7 +183,7 @@ private struct SettingsView: View {
 
     @ViewBuilder private var generalSection: some View {
         Section("General") {
-            Toggle("Open at login", isOn: Binding(get: { opensAtLogin }, set: setLogin))
+            Toggle("Open at login", isOn: Binding(get: { opensAtLogin }, set: { setLogin($0) }))
             Picker("Show the Notch on", selection: Binding(get: { shown }, set: { choice in selection = choice; store.update { $0.displaySelection = choice } })) {
                 Text("Primary display").tag(DisplaySelection.primary)
                 Text("All displays").tag(DisplaySelection.all)
@@ -256,7 +256,7 @@ private struct SettingsView: View {
 
     @ViewBuilder private var focusSection: some View {
         Section("Focus timer") {
-            Picker("Session length", selection: Binding(get: { focus.minutes }, set: focus.setMinutes)) {
+            Picker("Session length", selection: Binding(get: { focus.minutes }, set: { focus.setMinutes($0) })) {
                 ForEach(FocusLength.options(including: focus.minutes), id: \.self) { Text(FocusLength.format($0)).tag($0) }
             }
             LabeledContent(focus.phase.title) {
@@ -329,11 +329,11 @@ private struct SettingsView: View {
 
     @ViewBuilder private var usageSection: some View {
         Section("AI usage") {
-            Toggle("Show usage on Home", isOn: Binding(get: { usage.available }, set: usage.setAvailable))
+            Toggle("Show usage on Home", isOn: Binding(get: { usage.available }, set: { usage.setAvailable($0) }))
             SourceNote(source: .aiUsage)
         }
         Section("Claude Code") {
-            Toggle("Show Claude Code prompts on the Notch", isOn: Binding(get: { claude.enabled }, set: claude.setEnabled))
+            Toggle("Show Claude Code prompts on the Notch", isOn: Binding(get: { claude.enabled }, set: { claude.setEnabled($0) }))
             if claude.enabled {
                 Picker("Sound when Claude needs you", selection: Binding(get: { claude.sound ?? "" }, set: { claude.setSound($0.isEmpty ? nil : $0) })) {
                     Text("None").tag("")
