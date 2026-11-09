@@ -49,8 +49,13 @@ public enum NotchLayout {
     /// Home: as wide as its tiles side by side (never under 320), as tall as a tile and, when it has chips, the glance row
     /// and, when an event is next today, its line.
     public static func homeContent(tiles: [CGFloat], glance: Bool, nextEvent: Bool = false) -> CGSize {
-        let row = tiles.reduce(0, +) + gap * CGFloat(max(0, tiles.count - 1))
-        return CGSize(width: max(homeMinWidth - 2 * side, row), height: tile + (glance ? gap + glanceRow : 0) + (nextEvent ? nextEventLine : 0))
+        let gaps = CGFloat(max(0, tiles.count - 1))
+        let row: CGFloat = tiles.reduce(0, +) + gap * gaps
+        let width: CGFloat = max(homeMinWidth - 2 * side, row)
+        var height: CGFloat = tile
+        if glance { height += gap + glanceRow }
+        if nextEvent { height += nextEventLine }
+        return CGSize(width: width, height: height)
     }
 
     /// A Claude Code request: a strip over the page, at least this wide, as tall as its kind needs.
@@ -74,12 +79,14 @@ public enum NotchLayout {
             let descLines = option.description.isEmpty ? 0 : lines(option.description, perLine: 56)
             return 8 + 14 + CGFloat(descLines) * 14
         }
-        return min(claudeCardOptions, rows.reduce(0, +) + 4 * CGFloat(max(0, rows.count - 1)))
+        let gaps = CGFloat(max(0, rows.count - 1))
+        let total: CGFloat = rows.reduce(0, +) + 4 * gaps
+        return min(claudeCardOptions, total)
     }
     /// Header, question, options, answer box and buttons with their gaps; the tallest part, so the Notch holds still between parts.
     public static func claudeCard(_ questions: [ClaudeQuestion]) -> CGFloat {
         let parts = questions.map { claudeQuestionText($0) + claudeOptionsHeight($0) }.max() ?? 0
-        let chrome: CGFloat = 12 + 22 + 26 + 26 + 4 * 8 // split out: one expression with `parts` times out Xcode 16.4's type checker
+        let chrome: CGFloat = 118 // 12 + 22 + 26 + 26 + 4 * 8; as a sum it times out Xcode 16.4's type checker
         return min(claudeCardMax, chrome + parts)
     }
 
@@ -89,7 +96,10 @@ public enum NotchLayout {
     public static let claudeRow: CGFloat = 30
     public static let claudeRowsMax = 6
     public static func claudeSessionsContent(count: Int) -> CGSize {
-        CGSize(width: claudeWidth - 2 * side, height: claudeHeading + claudeRow * CGFloat(max(1, min(count, claudeRowsMax))))
+        let rows = CGFloat(max(1, min(count, claudeRowsMax)))
+        let width: CGFloat = claudeWidth - 2 * side
+        let height: CGFloat = claudeHeading + claudeRow * rows
+        return CGSize(width: width, height: height)
     }
 
     /// `content` with a request strip above it (as its own, when the Notch is only open for the request).
@@ -100,6 +110,8 @@ public enum NotchLayout {
 
     /// The open Notch around `content`, under a closed bar `closedHeight` tall.
     public static func open(content: CGSize, closedHeight: CGFloat) -> CGSize {
-        CGSize(width: content.width + 2 * side, height: closedHeight + topGap + content.height + bottom)
+        let width: CGFloat = content.width + 2 * side
+        let height: CGFloat = closedHeight + topGap + content.height + bottom
+        return CGSize(width: width, height: height)
     }
 }
