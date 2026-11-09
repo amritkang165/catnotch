@@ -70,13 +70,17 @@ public enum NotchLayout {
     }
     public static func claudeQuestionText(_ q: ClaudeQuestion) -> CGFloat { min(claudeCardText, CGFloat(lines(q.question, perLine: 52)) * 17) }
     public static func claudeOptionsHeight(_ q: ClaudeQuestion) -> CGFloat {
-        let rows = q.options.map { 8 + 14 + (CGFloat($0.description.isEmpty ? 0 : lines($0.description, perLine: 56)) * 14) }
+        let rows: [CGFloat] = q.options.map { option in
+            let descLines = option.description.isEmpty ? 0 : lines(option.description, perLine: 56)
+            return 8 + 14 + CGFloat(descLines) * 14
+        }
         return min(claudeCardOptions, rows.reduce(0, +) + 4 * CGFloat(max(0, rows.count - 1)))
     }
     /// Header, question, options, answer box and buttons with their gaps; the tallest part, so the Notch holds still between parts.
     public static func claudeCard(_ questions: [ClaudeQuestion]) -> CGFloat {
         let parts = questions.map { claudeQuestionText($0) + claudeOptionsHeight($0) }.max() ?? 0
-        return min(claudeCardMax, 12 + 22 + 26 + 26 + 4 * 8 + parts)
+        let chrome: CGFloat = 12 + 22 + 26 + 26 + 4 * 8 // split out: one expression with `parts` times out Xcode 16.4's type checker
+        return min(claudeCardMax, chrome + parts)
     }
 
     /// The Claude page (spec 0033): a heading and a row a session, up to six rows and then it scrolls; an empty list keeps one
