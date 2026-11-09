@@ -66,11 +66,11 @@ CatNotch sits at the top centre of your screen as a slim bar. Hover it, and it o
 
 ## Install
 
-Requires macOS 13 or newer. On a MacBook with a notch, CatNotch wraps the real notch. On any other screen it shows a slim pill instead.
+Requires macOS 14 (Sonoma) or newer on Apple silicon. On a MacBook with a notch, CatNotch wraps the real notch. On any other screen it shows a slim pill instead.
 
 [![Download for macOS](https://img.shields.io/github/v/release/thecharydev/catnotch?label=Download%20for%20macOS&logo=apple&style=for-the-badge)](https://github.com/thecharydev/catnotch/releases/latest/download/CatNotch.dmg)
 
-1. Download [**CatNotch.dmg**](https://github.com/thecharydev/catnotch/releases/latest/download/CatNotch.dmg) (universal: Apple silicon and Intel). Older versions are on [Releases](https://github.com/thecharydev/catnotch/releases).
+1. Download [**CatNotch.dmg**](https://github.com/thecharydev/catnotch/releases/latest/download/CatNotch.dmg) (Apple silicon). Older versions are on [Releases](https://github.com/thecharydev/catnotch/releases).
 2. Open it and drag CatNotch to Applications.
 3. Open CatNotch. macOS will block it (see below).
 
@@ -102,12 +102,12 @@ macOS ties these approvals to the app's signature, which changes with every buil
 
 ## Build from source
 
-Requires Node.js 20+.
+Requires Xcode 16 or newer and `cmake` (for the now playing adapter).
 
 ```bash
-npm install     # install dependencies
-npm run dev     # run in development, with hot reload
-npm run build -- --mac --universal   # build the macOS app and dmg into dist/
+scripts/build-adapter.sh      # build the now playing adapter (once, or when it changes)
+open CatNotch.xcodeproj       # run the CatNotch scheme
+xcodebuild test -project CatNotch.xcodeproj -scheme CatNotch -destination 'platform=macOS'
 ```
 
 ## Privacy
@@ -133,4 +133,4 @@ The notch themes (Mocha, Macchiato, Frappé) use the [Catppuccin](https://github
 
 ---
 
-Copyright © 2026 Yash Srivastava and Chary · App ID `com.devezio.desknotch`
+Copyright © 2026 Chary · App ID `com.thecharydev.catnotch`. Based on DeskNotch, Copyright © Yash Srivastava.

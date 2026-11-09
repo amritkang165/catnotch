@@ -16,9 +16,7 @@ jobs:
   test:
     runs-on: macos-15 # arm64; Xcode 16 for Swift Testing
     timeout-minutes: 15
-    defaults:
-      run:
-        working-directory: macos
     steps:
       - uses: actions/checkout@v4
+      - run: scripts/release-native.check.sh
       - run: xcodebuild test -project CatNotch.xcodeproj -scheme CatNotch -destination 'platform=macOS,arch=arm64'

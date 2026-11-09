@@ -1,14 +1,7 @@
-# dependencies
-node_modules
-
-# next.js
-.next
-next-env.d.ts
-
 # build
-/app
-/dist
-/native/mac/build
+/build
+.build
 
 # xcode
 xcuserdata
+DerivedData
