@@ -1,0 +1,23 @@
+name: Tests (native)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-macos-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: macos-26 # arm64, default Xcode 26.6
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - run: scripts/release-native.check.sh
+      - run: scripts/build-adapter.sh # so a cmake break shows here, not on the release tag
+      - run: xcodebuild test -project CatNotch.xcodeproj -scheme CatNotch -destination 'platform=macOS,arch=arm64'

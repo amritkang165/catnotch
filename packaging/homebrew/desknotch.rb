@@ -4,12 +4,13 @@ cask "desknotch" do
   version "VERSION"
   sha256 "SHA256"
 
-  url "https://github.com/OWNER/catnotch/releases/download/#{version}/CatNotch-#{version}-universal.dmg"
+  url "https://github.com/OWNER/catnotch/releases/download/#{version}/CatNotch.dmg"
   name "CatNotch"
   desc "Notch-style bar for the top of your screen"
   homepage "https://github.com/OWNER/catnotch"
 
-  depends_on macos: ">= :ventura"
+  depends_on arch: :arm64
+  depends_on macos: ">= :sonoma"
 
   app "CatNotch.app"
 
@@ -22,6 +23,7 @@ cask "desknotch" do
 
   zap trash: [
     "~/Library/Application Support/CatNotch",
+    "~/Library/Preferences/com.thecharydev.catnotch.plist",
     "~/Library/Preferences/com.devezio.desknotch.plist",
   ]
 end

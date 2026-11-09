@@ -1,5 +1,5 @@
 # CatNotch
-<img src="docs/images/desknotch-screenshot.png" alt="CatNotch open on a Mac, showing the cat companion, now playing and AI usage" width="100%">
+<img src="docs/images/notch-glance.png" alt="CatNotch open on Glance, showing the cat companion, now playing and AI usage" width="100%">
 
 
 **The notch for macOS.**
@@ -13,6 +13,14 @@
 CatNotch sits at the top centre of your screen as a slim bar. Hover it, and it opens into your music, a focus timer with a small companion, your tasks, a shelf for files, your AI usage and the apps you use most. Move away, and it folds back out of your way.
 
 > **Beta.** CatNotch is in public testing. Things may break; [feedback](#feedback) is very welcome.
+
+**Desk**: a focus timer beside your tasks.
+
+<img src="docs/images/notch-desk.png" alt="Desk: focus timer and tasks" width="80%">
+
+**Shelf**: drop files on the notch to park them.
+
+<img src="docs/images/notch-shelf.png" alt="Shelf: dropped files and screenshots" width="85%">
 
 ---
 
@@ -66,11 +74,11 @@ CatNotch sits at the top centre of your screen as a slim bar. Hover it, and it o
 
 ## Install
 
-Requires macOS 13 or newer. On a MacBook with a notch, CatNotch wraps the real notch. On any other screen it shows a slim pill instead.
+Requires macOS 14 (Sonoma) or newer on Apple silicon. On a MacBook with a notch, CatNotch wraps the real notch. On any other screen it shows a slim pill instead.
 
 [![Download for macOS](https://img.shields.io/github/v/release/thecharydev/catnotch?label=Download%20for%20macOS&logo=apple&style=for-the-badge)](https://github.com/thecharydev/catnotch/releases/latest/download/CatNotch.dmg)
 
-1. Download [**CatNotch.dmg**](https://github.com/thecharydev/catnotch/releases/latest/download/CatNotch.dmg) (universal: Apple silicon and Intel). Older versions are on [Releases](https://github.com/thecharydev/catnotch/releases).
+1. Download [**CatNotch.dmg**](https://github.com/thecharydev/catnotch/releases/latest/download/CatNotch.dmg) (Apple silicon). Older versions are on [Releases](https://github.com/thecharydev/catnotch/releases).
 2. Open it and drag CatNotch to Applications.
 3. Open CatNotch. macOS will block it (see below).
 
@@ -93,21 +101,23 @@ You only need to do this once per downloaded version.
 
 Settings tells you when a newer version is out. Press Update there and CatNotch downloads it, replaces itself and restarts. Nothing updates until you press it.
 
+**Coming from 1.0.x?** 2.0 is a native rewrite. CatNotch imports your old DeskNotch settings once on first launch, and the Update button in 1.0.x finds it. It needs Apple silicon and macOS 14 or newer.
+
 **Permissions**, each asked only when its feature needs it:
 - **Location**: to show the Wi-Fi network name. Say no and you get a plain "Wi-Fi" moment.
-- **Screen Recording**: only when you turn on Glass. Say no and the style stays Default.
+- **Calendar** and **Reminders**: only when you open the calendar or reminders view. CatNotch only reads them. Say no and those views stay empty.
 - **Keychain**: only after you agree to AI usage, so CatNotch can read the Claude Code sign in.
 
 macOS ties these approvals to the app's signature, which changes with every build. After an update you may be asked again.
 
 ## Build from source
 
-Requires Node.js 20+.
+Requires Xcode 26 or newer and `cmake` (`brew install cmake`, for the now playing adapter).
 
 ```bash
-npm install     # install dependencies
-npm run dev     # run in development, with hot reload
-npm run build -- --mac --universal   # build the macOS app and dmg into dist/
+scripts/build-adapter.sh      # build the now playing adapter (once, or when it changes)
+open CatNotch.xcodeproj       # run the CatNotch scheme
+xcodebuild test -project CatNotch.xcodeproj -scheme CatNotch -destination 'platform=macOS'
 ```
 
 ## Privacy
@@ -116,6 +126,7 @@ Everything stays on your computer. Media, microphone and camera state, Wi-Fi, Bl
 
 ## Known limits (beta)
 
+- **Apple silicon and macOS 14 or newer only.** Intel Macs and macOS 13 stay on 1.0.x, which will not update to 2.0.
 - **AI usage** appears only if you use Claude Code or Codex on the same Mac.
 - The microphone and camera moments say "Microphone" or "Camera" but not which app, because macOS only tells us which device is running.
 - Recent files, most used apps and screenshot catching rely on Spotlight. If Spotlight indexing is switched off, they stay empty.
@@ -133,4 +144,4 @@ The notch themes (Mocha, Macchiato, Frappé) use the [Catppuccin](https://github
 
 ---
 
-Copyright © 2026 Yash Srivastava and Chary · App ID `com.devezio.desknotch`
+Copyright © 2026 Chary · App ID `com.thecharydev.catnotch`. Based on DeskNotch, Copyright © Yash Srivastava.
