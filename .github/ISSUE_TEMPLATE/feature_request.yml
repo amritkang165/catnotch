@@ -1,0 +1,31 @@
+name: Feature request
+description: Suggest an idea or an improvement
+labels: [enhancement, needs-triage]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What are you trying to do, and what gets in the way today?
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Your idea
+      description: How could CatNotch help? A rough sketch is fine.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you considered
+  - type: dropdown
+    id: help
+    attributes:
+      label: Would you like to build it?
+      options:
+        - "No, I am only suggesting it"
+        - "Yes, I would like to try (I will wait for a go-ahead before starting)"
+    validations:
+      required: true
