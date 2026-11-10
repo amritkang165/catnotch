@@ -41,8 +41,9 @@ public struct NotchHover: Equatable, Sendable {
     // CGRect.contains drops the top edge, but a pointer pushed to the top of the display sits exactly on it.
     private static func contains(_ r: CGRect, _ p: CGPoint) -> Bool { p.x >= r.minX && p.x <= r.maxX && p.y >= r.minY && p.y <= r.maxY }
 
-    /// How far past the closed Notch the pointer still counts as arriving, so a pointer heading for it opens it a beat early.
-    public static let approach: CGFloat = 8
+    /// How far past the closed Notch the pointer still counts as arriving. None: the Electron Notch opened on its exact shape,
+    /// and any slop opened it as the pointer passed by on its way to the menu bar.
+    public static let approach: CGFloat = 0
     /// The same for a file being dragged in: a longer reach, because the drag is aimed at the Notch and the Notch is small.
     public static let dragReach: CGFloat = 48
 
