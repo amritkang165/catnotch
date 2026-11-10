@@ -330,17 +330,18 @@ private struct Art: View {
 private struct PulsingArt: View {
     let image: NSImage?
     let tint: Color
+    var playing = true
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 30)) { context in
-            let wave = (1 - cos(context.date.timeIntervalSinceReferenceDate * 2 * .pi / 1.2)) / 2
+        TimelineView(.animation(minimumInterval: 1.0 / 30, paused: !playing)) { context in // paused: no frames at all
+            let wave = playing ? (1 - cos(context.date.timeIntervalSinceReferenceDate * 2 * .pi / 1.2)) / 2 : 0
             Art(image: image, size: 16, radius: 4)
                 .scaleEffect(1 + 0.18 * wave)
                 .shadow(color: tint.opacity(0.35 + 0.5 * wave), radius: 2 + 3 * wave) // a glow in the art's colour that breathes with the swell
         }
         .frame(width: 16, height: 16)
         .accessibilityElement()
-        .accessibilityLabel("Playing")
+        .accessibilityLabel(playing ? "Playing" : "Paused")
     }
 }
 
@@ -620,7 +621,7 @@ struct NotchView: View {
         switch model.page {
         case .home:
             var tiles: [CGFloat] = model.showAvatar ? [model.dayOpen ? NotchLayout.companionDayWidth : NotchLayout.companionWidth] : []
-            if model.showMusic && nowPlaying.isPlaying { tiles.append(NotchLayout.musicWidth) }
+            if model.showMusic && nowPlaying.hasTrack { tiles.append(NotchLayout.musicWidth) }
             if usage.available { tiles.append(UsageTile.width(usage)) }
             if tiles.isEmpty { tiles.append(NotchLayout.timeWidth) } // the time is the last resort, when nothing else shows
             return NotchLayout.homeContent(tiles: tiles, glance: glance, nextEvent: nextEvent != nil)
@@ -697,9 +698,9 @@ struct NotchView: View {
                         VStack(spacing: 10) {
                             HStack(spacing: NotchLayout.gap) {
                                 if model.showAvatar { CompanionTile(model: model, focus: focus, tasks: tasks, nowPlaying: nowPlaying) }
-                                if model.showMusic && nowPlaying.isPlaying { NowPlayingCard(nowPlaying: nowPlaying) } // paused or stopped: hidden
+                                if model.showMusic && nowPlaying.hasTrack { NowPlayingCard(nowPlaying: nowPlaying) } // playing or paused; gone when stopped or stale
                                 if usage.available { UsageTile(usage: usage, room: .infinity) } // the Notch is as wide as its tiles
-                                if !model.showAvatar && !(model.showMusic && nowPlaying.isPlaying) && !usage.available { TimeTile() }
+                                if !model.showAvatar && !(model.showMusic && nowPlaying.hasTrack) && !usage.available { TimeTile() }
                             }
                             if glance { GlanceRow(system: system) }
                             if let nextEvent { NextEventLine(event: nextEvent) }
@@ -727,7 +728,7 @@ struct NotchView: View {
                 // The Electron Notch's closed bar: what is happening on the left, inset from the edge (8pt on a hardware notch,
                 // 20pt on the pill); the time and the mic and camera dots on the right. Nothing is drawn inside the cutout.
                 let left: ClosedLeft = system.headphones != nil ? .headphones : focus.phase == .running ? .focus : model.closedCompanion ? .companion : model.closedClock ? .clock : .none
-                let rightClock = model.closedClock && left != .clock && left != .headphones && !nowPlaying.isPlaying // the clock moves over when the left has something else
+                let rightClock = model.closedClock && left != .clock && left != .headphones && !nowPlaying.hasTrack // the clock moves over when the left has something else
                 let dots = system.micInUse || system.cameraInUse
                 ZStack {
                     Group {
@@ -749,7 +750,7 @@ struct NotchView: View {
                     HStack(spacing: 8) {
                         if rightClock { ClosedClock() }
                         if dots { PrivacyDots(system: system) }
-                        if nowPlaying.isPlaying { PulsingArt(image: nowPlaying.art, tint: nowPlaying.tint) } // the art on the right, swelling and easing back
+                        if nowPlaying.hasTrack { PulsingArt(image: nowPlaying.art, tint: nowPlaying.tint, playing: nowPlaying.isPlaying) } // the art on the right, swelling and easing back while playing, still when paused
                     }
                     .onGeometryChange(for: CGFloat.self, of: { $0.size.width }) { rightWidth = $0 }
                     .frame(maxWidth: .infinity, alignment: .trailing)

@@ -44,12 +44,12 @@ private let hover = NotchHover(closed: CGSize(width: 200, height: 32), open: CGS
     #expect(docked.isOpen(cursor: CGPoint(x: 780, y: 550), in: screen, wasOpen: true))
 }
 
-@Test func pointerNearTheClosedNotchOpensIt() {
-    // closed spans x 400...600, y 568...600: a few points off its side or underside still counts, further does not
-    #expect(hover.isOpen(cursor: CGPoint(x: 395, y: 590), in: screen, wasOpen: false))
-    #expect(hover.isOpen(cursor: CGPoint(x: 500, y: 562), in: screen, wasOpen: false))
-    #expect(!hover.isOpen(cursor: CGPoint(x: 380, y: 590), in: screen, wasOpen: false))
-    #expect(!hover.isOpen(cursor: CGPoint(x: 500, y: 540), in: screen, wasOpen: false))
+@Test func pointerNextToTheClosedNotchDoesNotOpenIt() {
+    // closed spans x 400...600, y 568...600: only on it opens it, as the Electron Notch did
+    #expect(hover.isOpen(cursor: CGPoint(x: 401, y: 590), in: screen, wasOpen: false))
+    #expect(hover.isOpen(cursor: CGPoint(x: 500, y: 569), in: screen, wasOpen: false))
+    #expect(!hover.isOpen(cursor: CGPoint(x: 395, y: 590), in: screen, wasOpen: false))
+    #expect(!hover.isOpen(cursor: CGPoint(x: 500, y: 562), in: screen, wasOpen: false))
 }
 
 @Test func draggedFileOpensItFromFurtherOff() {

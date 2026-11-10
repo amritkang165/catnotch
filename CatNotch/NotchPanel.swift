@@ -204,11 +204,13 @@ final class NotchPanel {
             leaveTimer?.cancel()
         }
         leaveExpired = false
+        let waiting = !claude.requests.isEmpty
+        // The request that opened it alone was answered (or gone): fold, not open the page under the pointer that clicked it.
+        if !waiting && peeking && !pinned { suppressed = true }
         if suppressed { if inside { inside = false } else { suppressed = false } } // Esc: not again until the pointer has left
         // A waiting request keeps the Notch open, to the request alone while the pointer is elsewhere.
         // The request alone stays alone for as long as it waits, even with the pointer on it (as the Electron strip does),
         // so hovering a question opens its card, not the whole page under it. It is alone only if it came to a closed Notch.
-        let waiting = !claude.requests.isEmpty
         if !waiting || pinned { peeking = false } else if !model.isOpen && !inside { peeking = true }
         model.peek = peeking
         model.pointerInside = inside && near // the pointer itself, not the beat the Notch waits before letting go

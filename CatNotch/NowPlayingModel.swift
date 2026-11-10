@@ -16,6 +16,11 @@ final class NowPlayingModel {
     private(set) var tint = Color.gray
 
     var isPlaying: Bool { current?.isPlaying ?? false }
+    /// A track is loaded and, if paused, not for so long that it is stale (spec 0036). The card and the closed art follow this.
+    var hasTrack: Bool { current != nil && !expired }
+    private var expired = false
+    private var pauseTimer: Task<Void, Never>?
+    private static let pauseTimeout: Duration = .seconds(30 * 60)
 
     private var stream = NowPlayingStream()
     private var process: Process?
@@ -98,7 +103,16 @@ final class NowPlayingModel {
 
     private func publish() {
         let next = stream.current
+        if next?.title != current?.title { pauseTimer?.cancel(); pauseTimer = nil; expired = false } // a new track starts its own wait
         if next != current { current = next }
+        if next == nil || next?.isPlaying == true { pauseTimer?.cancel(); pauseTimer = nil; expired = false }
+        else if pauseTimer == nil { // paused: gone after the timeout, unless it plays again first
+            pauseTimer = Task { [weak self] in
+                try? await Task.sleep(for: Self.pauseTimeout)
+                guard !Task.isCancelled else { return }
+                self?.expired = true
+            }
+        }
         let source = next?.artwork
         guard source != artSource else { return }
         artSource = source

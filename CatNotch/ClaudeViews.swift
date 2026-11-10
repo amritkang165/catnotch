@@ -114,6 +114,7 @@ struct ClaudeStrip: View {
     @State private var typed: [String: String] = [:]
     @FocusState private var typing: Bool
     @FocusState private var sendFocused: Bool
+    @FocusState private var cardFocused: Bool // the card itself, so Enter lands even when no field or button has focus
 
     private var open: Bool { claude.open }
     private var isPermission: Bool { if case .permission = request.kind { true } else { false } }
@@ -287,9 +288,8 @@ struct ClaudeStrip: View {
             })
         let next = {
             guard ready else { return }
-            if !last { step = part + 1 } else if allReady { sendFocused = true } // Enter moves on; Send is a deliberate press
+            if !last { step = part + 1 } else if allReady { send(questions) } // Enter moves on, or sends once Send is lit
         }
-        let press = { if last { if allReady { send(questions) } } else if ready { step = part + 1 } }
         return VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
                 Image(systemName: "terminal").font(.system(size: 11, weight: .semibold))
@@ -314,6 +314,7 @@ struct ClaudeStrip: View {
                         ForEach(q.options, id: \.label) { option in
                             Hovering { hover in
                             Button {
+                                cardFocused = true // a plain button takes no focus on a click, which left Enter with nowhere to go
                                 if q.multiSelect {
                                     picked[q.question] = chosen.contains(option.label) ? chosen.filter { $0 != option.label } : chosen + [option.label]
                                 } else {
@@ -347,6 +348,8 @@ struct ClaudeStrip: View {
                         if last { send(questions) } else { step = part + 1 }
                     }
                     .focusable().focused($sendFocused)
+                    .overlay(Capsule().strokeBorder(.white.opacity(0.9), lineWidth: 1.5).padding(-3).opacity(last && allReady ? 1 : 0)) // lit: Enter sends
+                    .animation(.easeOut(duration: 0.15), value: last && allReady)
                     .opacity((last ? allReady : ready) ? 1 : 0.4).disabled(!(last ? allReady : ready))
                     Spacer(minLength: 0)
                     pill("Answer in terminal") { claude.answer(request.id, .pass) }
@@ -354,9 +357,12 @@ struct ClaudeStrip: View {
             }
         }
         .frame(maxHeight: .infinity, alignment: .center)
-        // Enter on Send or Next presses it; anywhere else it moves on, as the Electron card does.
+        .focusable().focused($cardFocused).focusEffectDisabled()
+        .onAppear { cardFocused = true }
+        .onChange(of: step) { cardFocused = true } // a new part: Enter still moves on
+        // Enter moves on to the next part, or sends from the last (Send is ringed once every part has an answer).
         .onKeyPress(.return) {
-            if sendFocused { press() } else { next() }
+            next()
             return .handled
         }
     }
