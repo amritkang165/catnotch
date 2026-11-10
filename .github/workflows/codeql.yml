@@ -24,7 +24,7 @@ jobs:
         with:
           languages: swift
           build-mode: manual
-      - run: xcodebuild build -project CatNotch.xcodeproj -scheme CatNotch -destination 'platform=macOS,arch=arm64'
+      - run: xcodebuild build -project CatNotch.xcodeproj -scheme CatNotch -destination 'generic/platform=macOS'
       - uses: github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
         with:
           category: /language:swift
