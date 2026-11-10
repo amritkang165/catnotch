@@ -4,6 +4,8 @@
 
 **The notch for macOS.**
 
+[![Tests](https://github.com/thecharydev/catnotch/actions/workflows/test-macos.yml/badge.svg)](https://github.com/thecharydev/catnotch/actions/workflows/test-macos.yml) [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) ![macOS 14+](https://img.shields.io/badge/macOS-14%2B-lightgrey?logo=apple) ![Apple silicon](https://img.shields.io/badge/Apple%20silicon-only-lightgrey)
+
 [![Download for macOS](https://img.shields.io/github/v/release/thecharydev/catnotch?label=Download%20for%20macOS&logo=apple&style=for-the-badge)](https://github.com/thecharydev/catnotch/releases/latest/download/CatNotch.dmg)
 
 > **macOS says "CatNotch Not Opened"?** The build is not notarized, so the first open is blocked. Click **Done** (not Move to Bin), then open **System Settings, Privacy and Security** and click **Open Anyway**, or run `xattr -cr /Applications/CatNotch.app` in Terminal. [Full steps](#catnotch-not-opened).
@@ -58,7 +60,7 @@ CatNotch sits at the top centre of your screen as a slim bar. Hover it, and it o
 - **Safe by default**: it takes keyboard focus only when you click the answer box, waits 60 seconds, then hands the question back to Claude's own prompt. If CatNotch is closed, Claude simply asks as usual.
 - **Setup**: Settings, General, **Claude Code on the notch**. It shows exactly what it will add to `~/.claude/settings.json`, saves a backup the first time, and only ever touches its own entries. If you turned it on in an older version, Settings offers **Update hooks**. Start a new Claude session after turning it on.
 
-### Your calendar on the notch (macOS)
+### Your calendar on the notch
 - **Calendar view**: today and tomorrow from the calendars already in your Mac's Calendar app (Google, iCloud, Outlook), with each calendar's colour, the time, and a **Join** button for Zoom, Meet and Teams links. A line on Home shows what is next ("Standup in 25 min"). Birthdays get a cake icon and holidays or festivals from a calendar you cannot edit get a flag, and a day's pane lists them first under "Special days".
 - **Private**: it asks first (only when you click Allow), reads only, and keeps nothing. Switch single calendars off in Settings, Notch, Home cards.
 
@@ -132,9 +134,43 @@ Everything stays on your computer. Media, microphone and camera state, Wi-Fi, Bl
 - Recent files, most used apps and screenshot catching rely on Spotlight. If Spotlight indexing is switched off, they stay empty.
 - Now playing uses a private Apple interface that Apple can change in a future macOS release.
 
+## How it works
+
+CatNotch is one native Swift app with no third-party packages.
+
+- **One panel per display.** `NotchController` and `NotchPanel` make a transparent, always on top panel for each screen. `NotchHover` decides when the pointer is over the notch, so everywhere else clicks go through.
+- **Logic in `CatNotchCore`, wiring in `CatNotch`.** `CatNotchCore/` is a library of pure, tested logic (focus timer, tasks, layout, hover, Claude hooks and sessions, update). `CatNotch/` holds the AppKit window code, SwiftUI views and the `*Model.swift` models that connect Core to the system.
+- **One JSON store.** Settings and data live in `catnotch-store.json` in `~/Library/Application Support/CatNotch`. An unreadable store is moved aside, never overwritten.
+- **Claude Code hooks.** A small local server receives Claude Code's permission and question hooks, and CatNotch keeps its own entries in `~/.claude/settings.json` in sync with the server's port.
+- **Now playing** goes through a vendored [MediaRemote adapter](vendor/mediaremote-adapter) (BSD-3).
+
+Design decisions are in [`docs/adr/`](docs/adr), per-feature build specs in [`docs/specs/`](docs/specs), and the vocabulary in [`GLOSSARY.md`](GLOSSARY.md).
+
+## Roadmap
+
+What is open right now, taken from the issue tracker. None of it is a promise or a date.
+
+- [Keyboard navigation](https://github.com/thecharydev/catnotch/issues/35): open the notch, switch sections and use the calendar without the mouse.
+- [Now playing when paused](https://github.com/thecharydev/catnotch/issues/38): keep the song on the notch with a Play button.
+- [Claude Code on the notch](https://github.com/thecharydev/catnotch/issues/36): handle interrupted sessions and more session features.
+
+Ideas and votes are welcome in [issues](https://github.com/thecharydev/catnotch/issues). See also the [changelog](CHANGELOG.md).
+
+## Contributing
+
+Bug reports, fixes, tests and docs are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) for the setup, branch and commit rules, and how to run the tests. Everyone taking part is expected to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
+
 ## Feedback
 
-Found a bug or have an idea? [Open an issue](https://github.com/thecharydev/catnotch/issues) with what you did, what happened, and a screenshot if something looked off.
+Found a bug or have an idea? [Open an issue](https://github.com/thecharydev/catnotch/issues/new/choose) with what you did, what happened, and a screenshot if something looked off.
+
+## Security
+
+Please report vulnerabilities privately, not in a public issue. See [SECURITY.md](SECURITY.md).
+
+## License
+
+[MIT](LICENSE). The vendored MediaRemote adapter in `vendor/mediaremote-adapter/` is BSD 3-Clause, with its own [license](vendor/mediaremote-adapter/LICENSE).
 
 ## Credits
 

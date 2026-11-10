@@ -1,0 +1,68 @@
+name: Bug report
+description: Something in CatNotch does not work as expected
+labels: [needs-triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. For security problems, do not file an issue; see [SECURITY.md](https://github.com/thecharydev/catnotch/blob/main/SECURITY.md).
+  - type: input
+    id: version
+    attributes:
+      label: CatNotch version
+      description: In Finder, select CatNotch.app and choose Get Info.
+      placeholder: 2.0.0
+    validations:
+      required: true
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version and Mac model
+      placeholder: macOS 15.1, MacBook Pro 14-inch (notch)
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Notch panel, hover or displays
+        - Now playing
+        - Focus timer
+        - Tasks
+        - Shelf or screenshots
+        - Calendar or reminders
+        - AI usage
+        - Claude Code on the notch
+        - Settings
+        - Update
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Hover the notch
+        2. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened
+      description: A screenshot or screen recording helps a lot if something looked off.
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Number of displays, an external monitor, other notch or menu bar apps, and so on.
